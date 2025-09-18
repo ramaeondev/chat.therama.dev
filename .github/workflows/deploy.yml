@@ -24,19 +24,12 @@ jobs:
           node-version: 20
           cache: 'npm'
           
-      - name: Cache node modules
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
+      - name: Clean install dependencies
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
+          npm install
             
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: npm ci
-        
       - name: Build
         run: npm run build:prod
         
