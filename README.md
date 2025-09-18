@@ -1,6 +1,55 @@
-# ChatTheramaDev
+# ChatTherama
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.2.
+A modern chat application built with Angular and deployed on AWS S3 with CloudFront.
+
+## Features
+
+- Real-time chat interface
+- Responsive design
+- Deployed on AWS S3 with CloudFront CDN
+- CI/CD with GitHub Actions
+
+## Prerequisites
+
+- Node.js 20.x
+- npm 9.x or later
+- AWS Account with S3 and CloudFront access
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start development server: `npm start`
+4. Open `http://localhost:4200` in your browser
+
+## Deployment
+
+This project is set up for automatic deployment to AWS S3 using GitHub Actions. To deploy:
+
+1. Set up the following GitHub Secrets:
+   - `AWS_ACCESS_KEY_ID_GLOBAL`
+   - `AWS_SECRET_ACCESS_KEY_GLOBAL`
+   - `AWS_REGION`
+   - `S3_BUCKET`
+   - `CLOUDFRONT_DISTRIBUTION_ID` (if using CloudFront)
+
+2. Push to the `main` branch to trigger automatic deployment
+
+## Environment Configuration
+
+- Development: `environment.ts`
+- Production: `environment.prod.ts`
+
+## Built With
+
+- [Angular](https://angular.io/) - The web framework used
+- [Tailwind CSS](https://tailwindcss.com/) - For styling
+- [AWS S3](https://aws.amazon.com/s3/) - For static website hosting
+- [CloudFront](https://aws.amazon.com/cloudfront/) - For CDN
+
+## License
+
+This project is licensed under the MIT License
 
 ## Development server
 
