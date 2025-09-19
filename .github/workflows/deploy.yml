@@ -1,77 +1,96 @@
 
-name: Deploy to AWS S3
+name: Build and Deploy (Docker -> ECR -> EC2)
 
 on:
   push:
     branches: [ master ]
   workflow_dispatch:
 
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }} 
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-    
+
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Capture start time
         run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
 
       - name: Checkout code
         uses: actions/checkout@v4
-        
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          
-      - name: Clean install dependencies
-        run: |
-          rm -rf node_modules package-lock.json
-          npm cache clean --force
-          npm install
-            
-      - name: Build
-        run: npm run build:prod
-        
+
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_GLOBAL }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_GLOBAL }}
-          aws-region: ${{ secrets.AWS_REGION }}
-          
-      - name: Deploy to S3
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get AWS Account ID
+        id: aws
+        run: echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to ECR
+        env:
+          AWS_ACCOUNT_ID: ${{ steps.aws.outputs.account_id }}
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
-          # Sync all files except HTML, CSS, and JS with cache headers
-          aws s3 sync ./dist/chat-therama-dev/browser/ s3://${{ secrets.S3_BUCKET }} \
-            --delete \
-            --cache-control 'public, max-age=31536000' \
-            --exclude 'index.html' \
-            --exclude '*.css' \
-            --exclude '*.js' \
-            
-          # Upload HTML files with no-cache headers
-          aws s3 sync ./dist/chat-therama-dev/browser/ s3://${{ secrets.S3_BUCKET }} \
-            --delete \
-            --cache-control 'no-cache, no-store, must-revalidate' \
-            --content-type 'text/html' \
-            --exclude '*' \
-            --include '*.html' \
-            
-          # Upload CSS and JS with cache headers
-          aws s3 sync ./dist/chat-therama-dev/browser/ s3://${{ secrets.S3_BUCKET }} \
-            --delete \
-            --cache-control 'public, max-age=31536000' \
-            --exclude '*' \
-            --include '*.css' \
-            --include '*.js'
-        
-      - name: Invalidate CloudFront cache
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
-            
+          IMAGE_URI=${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+          echo "Building image: $IMAGE_URI"
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
+          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+
+      - name: Upload docker-compose to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "deploy/docker-compose.yml"
+          target: "~/chat-therama-deploy"
+
+      - name: Deploy on EC2 via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            mkdir -p ~/chat-therama-deploy
+            cd ~/chat-therama-deploy
+
+            # Login to ECR on the EC2 host
+            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+            IMAGE_URI=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+            echo "Pulling $IMAGE_URI"
+            docker pull $IMAGE_URI
+
+            # Create .env file for compose
+            echo "IMAGE=$IMAGE_URI" > .env
+
+            # Start/Update stack
+            docker compose -f docker-compose.yml down || true
+            docker compose -f docker-compose.yml up -d
+
       - name: Log and Update Deployment
         if: always()
         uses: ramaeondev/therama.dev/.github/actions/log-and-update-deployment@master

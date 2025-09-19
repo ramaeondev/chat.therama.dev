@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.dockerignore
+Dockerfile
+.git
+.gitignore
+.github
+.angular
+.angular/cache
+dist
+coverage
+.editorconfig
+.vscode
+**/*.tsbuildinfo
+**/*.log

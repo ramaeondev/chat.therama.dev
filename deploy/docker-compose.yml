@@ -1,0 +1,14 @@
+services:
+  web:
+    image: ${IMAGE}
+    container_name: chat-therama-web
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
