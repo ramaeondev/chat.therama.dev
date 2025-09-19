@@ -10,6 +10,8 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }} 
   IMAGE_TAG: ${{ github.sha }}
+  PUBLIC_ECR_REGION: us-east-1
+  ECR_PUBLIC_REPO: public.ecr.aws/r5p8n8t0/chat.therama.dev
 
 jobs:
   build_and_deploy:
@@ -33,20 +35,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_GLOBAL }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Get AWS Account ID
-        id: aws
-        run: echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
-
-      - name: Login to Amazon ECR
-        id: ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push image to ECR
-        env:
-          AWS_ACCOUNT_ID: ${{ steps.aws.outputs.account_id }}
-          REGISTRY: ${{ steps.ecr.outputs.registry }}
+      - name: Login to Amazon ECR Public
         run: |
-          IMAGE_URI=${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+          aws ecr-public get-login-password --region ${PUBLIC_ECR_REGION} | \
+            docker login --username AWS --password-stdin public.ecr.aws
+
+      - name: Build, tag, and push image to ECR Public
+        run: |
+          IMAGE_URI=${ECR_PUBLIC_REPO}:${IMAGE_TAG}
           echo "Building image: $IMAGE_URI"
           docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
@@ -64,10 +60,9 @@ jobs:
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v1.2.0
         env:
-          AWS_REGION: ${{ env.AWS_REGION }}
-          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          PUBLIC_ECR_REGION: ${{ env.PUBLIC_ECR_REGION }}
+          ECR_PUBLIC_REPO: ${{ env.ECR_PUBLIC_REPO }}
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
-          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
@@ -77,10 +72,11 @@ jobs:
             mkdir -p ~/chat-therama-deploy
             cd ~/chat-therama-deploy
 
-            # Login to ECR on the EC2 host
-            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+            # Login to ECR Public on the EC2 host
+            aws ecr-public get-login-password --region ${PUBLIC_ECR_REGION} | \
+              docker login --username AWS --password-stdin public.ecr.aws
 
-            IMAGE_URI=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+            IMAGE_URI=${ECR_PUBLIC_REPO}:${IMAGE_TAG}
             echo "Pulling $IMAGE_URI"
             docker pull $IMAGE_URI
 
