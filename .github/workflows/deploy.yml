@@ -1,4 +1,3 @@
-
 name: Build and Deploy (Docker -> ECR -> EC2)
 
 on:
@@ -8,10 +7,10 @@ on:
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
-  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }} 
   IMAGE_TAG: ${{ github.sha }}
-  PUBLIC_ECR_REGION: us-east-1
-  ECR_PUBLIC_REPO: public.ecr.aws/r5p8n8t0/chat.therama.dev
+  ECR_PUBLIC_REPO: ${{ secrets.ECR_PUBLIC_REPO }}
+  EC2_USER: ${{ secrets.EC2_USER }}
+  EC2_HOST: ${{ secrets.EC2_HOST }}
 
 jobs:
   build_and_deploy:
@@ -28,6 +27,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate SSH key is present
+        run: |
+          if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then
+            echo "EC2_SSH_KEY secret is empty or missing." >&2
+            exit 1
+          fi
+
+      - name: Write SSH key to file
+        run: |
+          mkdir -p ./.ssh
+          umask 077
+          echo "${{ secrets.EC2_SSH_KEY }}" > ./.ssh/ec2_key
+          chmod 600 ./.ssh/ec2_key
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -37,7 +50,7 @@ jobs:
 
       - name: Login to Amazon ECR Public
         run: |
-          aws ecr-public get-login-password --region ${PUBLIC_ECR_REGION} | \
+          aws ecr-public get-login-password --region us-east-1 | \
             docker login --username AWS --password-stdin public.ecr.aws
 
       - name: Build, tag, and push image to ECR Public
@@ -45,47 +58,37 @@ jobs:
           IMAGE_URI=${ECR_PUBLIC_REPO}:${IMAGE_TAG}
           echo "Building image: $IMAGE_URI"
           docker build -t $IMAGE_URI .
-          docker push $IMAGE_URI
-          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
-
-      - name: Upload docker-compose to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "deploy/docker-compose.yml"
-          target: "~/chat-therama-deploy"
-
-      - name: Deploy on EC2 via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        env:
-          PUBLIC_ECR_REGION: ${{ env.PUBLIC_ECR_REGION }}
-          ECR_PUBLIC_REPO: ${{ env.ECR_PUBLIC_REPO }}
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -euo pipefail
-            mkdir -p ~/chat-therama-deploy
-            cd ~/chat-therama-deploy
-
-            # Login to ECR Public on the EC2 host
-            aws ecr-public get-login-password --region ${PUBLIC_ECR_REGION} | \
-              docker login --username AWS --password-stdin public.ecr.aws
-
-            IMAGE_URI=${ECR_PUBLIC_REPO}:${IMAGE_TAG}
-            echo "Pulling $IMAGE_URI"
-            docker pull $IMAGE_URI
-
-            # Create .env file for compose
-            echo "IMAGE=$IMAGE_URI" > .env
-
-            # Start/Update stack
-            docker compose -f docker-compose.yml down || true
-            docker compose -f docker-compose.yml up -d
+          docker push $IMAGE_URI          
+        
+      - name: Upload docker-compose.yml to EC2
+        run: |
+          scp -i ./.ssh/ec2_key -o StrictHostKeyChecking=no \
+            deploy/docker-compose.yml \
+            ${EC2_USER}@${EC2_HOST}:~/chat-therama-deploy/
+        
+      - name: SSH to EC2 and Deploy
+        run: |
+          ssh -i ./.ssh/ec2_key -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \
+          "ECR_PUBLIC_REPO='${ECR_PUBLIC_REPO}' IMAGE_TAG='${IMAGE_TAG}' bash -s" <<'EOF'
+          set -euo pipefail
+          cd ~/chat-therama-deploy
+        
+          # Ensure docker compose plugin
+          if ! sudo docker compose version >/dev/null 2>&1; then
+            echo "Installing Docker Compose plugin..."
+            sudo mkdir -p /usr/libexec/docker/cli-plugins
+            sudo curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
+              -o /usr/libexec/docker/cli-plugins/docker-compose
+            sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+          fi
+        
+          # Deploy
+          IMAGE_URI=${ECR_PUBLIC_REPO}:${IMAGE_TAG}
+          sudo docker pull $IMAGE_URI
+          echo "IMAGE=$IMAGE_URI" > .env
+          sudo docker compose -f docker-compose.yml down || true
+          sudo docker compose -f docker-compose.yml up -d
+          EOF
 
       - name: Log and Update Deployment
         if: always()
