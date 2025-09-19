@@ -1,0 +1,36 @@
+<div class="flex justify-center items-center min-h-screen bg-gray-100">
+    <div class="bg-white p-6 rounded-2xl shadow-md w-full max-w-md">
+      <h2 class="text-2xl font-bold text-center mb-4">Sign Up</h2>
+
+      <form [formGroup]="form" (ngSubmit)="signUp()" class="space-y-4">
+
+        <!-- Name -->
+        <div>
+          <label class="block mb-1 text-sm font-medium">Name</label>
+          <input type="text" formControlName="name"
+            class="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300" />
+          <small class="text-red-600" *ngIf="form.controls.name.invalid && form.controls.name.touched">
+            Name is required
+          </small>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block mb-1 text-sm font-medium">Email</label>
+          <input type="email" formControlName="email"
+            class="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300" />
+          <small class="text-red-600" *ngIf="form.controls.email.invalid && form.controls.email.touched">
+            Valid email required
+          </small>
+        </div>
+
+        <button type="submit" [disabled]="form.invalid || loading()"
+          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
+          {{ loading() ? 'Sending...' : 'Sign Up with OTP' }}
+        </button>
+      </form>
+
+      <p *ngIf="message()" class="text-green-600 mt-4 text-center">{{ message() }}</p>
+      <p *ngIf="error()" class="text-red-600 mt-4 text-center">{{ error() }}</p>
+    </div>
+  </div>
