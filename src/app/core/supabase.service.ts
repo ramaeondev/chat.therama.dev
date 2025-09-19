@@ -22,6 +22,18 @@ export class SupabaseService {
     });
   }
 
+  // Sign in with OTP restricted to existing users only (no auto sign-up)
+  async signInWithOtpExistingOnly(email: string) {
+    const { data, error } = await this.supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+      },
+    });
+    if (error) throw error;
+    return data;
+  }
+
   // Verify OTP
   async verifyOtp(email: string, token: string) {
     const { data, error } = await this.supabase.auth.verifyOtp({
@@ -44,3 +56,4 @@ export class SupabaseService {
     await this.supabase.auth.signOut();
   }
 }
+

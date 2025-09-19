@@ -1,28 +1,62 @@
 <div class="max-w-md mx-auto mt-20 p-6 bg-white rounded-xl shadow-md">
     <h1 class="text-2xl font-bold mb-4">Sign in</h1>
   
-    <input
-      type="email"
-      [(ngModel)]="email"
-      placeholder="Enter your email"
-      class="w-full border p-2 rounded mb-4"
-    />
-  
-    <input
-      type="text"
-      [(ngModel)]="otp"
-      placeholder="Enter OTP"
-      class="w-full border p-2 rounded mb-4"
-    />
-  
-    <button
-      (click)="verifyOtp()"
-      [disabled]="loading"
-      class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-    >
-      {{ loading ? 'Verifying...' : 'Verify OTP' }}
-    </button>
-  
-    <p class="mt-4 text-sm text-gray-600">{{ message }}</p>
+    <form [formGroup]="form" (ngSubmit)="showOtp() ? verifyOtp() : requestOtp()">
+      <!-- Email Field -->
+      <div>
+        <input
+          type="email"
+          placeholder="Enter your email"
+          formControlName="email"
+          class="w-full border p-2 rounded mb-2"
+        />
+        <div class="text-sm text-red-600 mb-2" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">
+          Please enter a valid email address.
+        </div>
+      </div>
+
+      <!-- OTP Field (shown after requesting OTP) -->
+      <div *ngIf="showOtp()">
+        <input
+          type="text"
+          placeholder="Enter OTP"
+          formControlName="otp"
+          class="w-full border p-2 rounded mb-2"
+        />
+        <!-- Resend OTP timer/button -->
+        <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+          <span *ngIf="remainingSeconds() > 0">Resend in {{ formatMMSS(remainingSeconds()) }}</span>
+          <button type="button"
+                  class="text-blue-600 hover:underline disabled:text-gray-400"
+                  (click)="resendOtp()"
+                  [disabled]="remainingSeconds() > 0 || loading()">
+            Resend OTP
+          </button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <button
+        type="submit"
+        [disabled]="loading() || (!showOtp() && form.get('email')?.invalid) || (showOtp() && !form.get('otp')?.value)"
+        class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+      >
+        {{ loading() ? (showOtp() ? 'Verifying...' : 'Sending...') : (showOtp() ? 'Verify OTP' : 'Get OTP') }}
+      </button>
+    </form>
+
+    <p *ngIf="error()" class="mt-4 text-sm text-red-600" aria-live="assertive">{{ error() }}</p>
+    <p *ngIf="!error() && message()" class="mt-2 text-sm text-gray-600" aria-live="polite">{{ message() }}</p>
+
+    <div *ngIf="needSignup()" class="mt-2">
+      <button type="button" (click)="goToSignup()" class="w-full bg-gray-100 text-gray-900 py-2 rounded hover:bg-gray-200 border border-gray-300">
+        Go to Signup
+      </button>
+    </div>
+
+    <div class="mt-4 text-center text-sm text-gray-600">
+      <span>Don’t have an account?</span>
+      <button type="button" class="text-blue-600 hover:underline ml-1" (click)="goToSignup()">Sign up</button>
+    </div>
   </div>
   
