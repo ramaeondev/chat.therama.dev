@@ -19,12 +19,22 @@ export class Dashboard implements OnDestroy {
   loggingOut = signal<boolean>(false);
 
   // Friends and chat state
-  friends = signal<Array<{ id: string; name?: string | null; email?: string | null }>>([]);
+  friends = signal<Array<{ id: string; name?: string | null; email?: string | null; avatar_url?: string | null }>>([]);
   selectedFriendId = signal<string | null>(null);
   messages = signal<Array<{ id?: string; from: 'me' | 'them'; text: string; at: Date }>>([]);
   private _messageIds = new Set<string>();
   private _unsubscribe: (() => void) | null = null;
   user: WritableSignal<UserMetadata | null> = signal<UserMetadata | null>(null);
+
+  // Presence / realtime status
+  onlineIds = signal<string[]>([]);
+  realtimeConnected = signal<boolean>(false);
+  private _unsubPresence: (() => void) | null = null;
+
+  // Email search state
+  searchEmail = signal<string>('');
+  searching = signal<boolean>(false);
+  searchError = signal<string>('');
 
   messageForm!: FormGroup;
 
@@ -53,6 +63,8 @@ export class Dashboard implements OnDestroy {
     if (first) {
       this.selectFriend(first.id);
     }
+    // Setup presence after ensuring we have a user
+    await this.setupPresence();
   }
 
   async loadFriends() {
@@ -144,7 +156,74 @@ export class Dashboard implements OnDestroy {
     return f?.name || f?.email || 'Friend';
   }
 
+  getFriend(id: string | null) {
+    if (!id) return undefined;
+    return this.friends().find(p => p.id === id);
+  }
+
+  private normalizeEmail(v: string) {
+    return (v || '').trim().toLowerCase();
+  }
+
+  onSearchEmail(event: Event) {
+    const target = event.target as HTMLInputElement | null;
+    this.searchEmail.set(target?.value ?? '');
+  }
+
+  async startChatByEmail() {
+    this.searchError.set('');
+    const email = this.normalizeEmail(this.searchEmail());
+    if (!email) {
+      this.searchError.set('Enter an email to search');
+      return;
+    }
+    this.searching.set(true);
+    try {
+      const profile = await this.supabase.findProfileByEmail(email);
+      if (!profile) {
+        this.searchError.set('No user found with that email');
+        return;
+      }
+      if (!this.friends().some(f => f.id === profile.id)) {
+        this.friends.update(list => [{ id: profile.id, name: profile.name, email: profile.email, avatar_url: profile.avatar_url }, ...list]);
+      }
+      await this.selectFriend(profile.id);
+      this.searchEmail.set('');
+    } catch (e: any) {
+      this.searchError.set(e?.message || 'Failed to search');
+    } finally {
+      this.searching.set(false);
+    }
+  }
+
+  private async setupPresence() {
+    const myId = await this.supabase.getUserId();
+    const me = this.user();
+    if (!myId) return;
+    // Clean previous presence
+    if (this._unsubPresence) {
+      this._unsubPresence();
+      this._unsubPresence = null;
+    }
+    const meta = { name: (me as any)?.name ?? null, email: this.userEmail() };
+    this._unsubPresence = this.supabase.presenceJoin(
+      'global',
+      myId,
+      meta,
+      (channel) => {
+        // On sync, compute online IDs from presence state
+        // presenceState returns { [key: string]: Array<meta> }
+        // Keys are the user IDs we used when tracking
+        const state = (channel as any).presenceState?.() || {};
+        const ids = Object.keys(state);
+        this.onlineIds.set(ids);
+        this.realtimeConnected.set(true);
+      }
+    );
+  }
+
   ngOnDestroy(): void {
     if (this._unsubscribe) this._unsubscribe();
+    if (this._unsubPresence) this._unsubPresence();
   }
 }

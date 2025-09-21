@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient, Session, User } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, Session, User, RealtimeChannel } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -13,6 +13,27 @@ export class SupabaseService {
       environment.supabaseUrl,
       environment.supabaseKey
     );
+  }
+
+  // Presence helpers
+  presenceJoin(
+    room: string,
+    key: string,
+    metadata: Record<string, any>,
+    onSync: (channel: RealtimeChannel) => void
+  ) {
+    const channel = this.supabase.channel(`presence:${room}`, {
+      config: { presence: { key } },
+    });
+    channel.on('presence', { event: 'sync' }, () => onSync(channel));
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await channel.track(metadata);
+      }
+    });
+    return () => {
+      this.supabase.removeChannel(channel);
+    };
   }
 
   async signUpWithOtp(email: string, name: string) {
@@ -79,7 +100,7 @@ export class SupabaseService {
   // List all other profiles as friends (no filtering)
   async listFriends() {
     const myId = await this.getUserId();
-    const query = this.supabase.from('profiles').select('id, email, name').order('name', { ascending: true });
+    const query = this.supabase.from('profiles').select('id, email, name, avatar_url').order('name', { ascending: true });
     const { data, error } = await query;
     if (error) throw error;
     const all = data || [];
@@ -113,30 +134,37 @@ export class SupabaseService {
 
   subscribeToMessages(friendId: string, onInsert: (row: any) => void) {
     const channel = this.supabase.channel(`messages-with-${friendId}`);
-    channel.on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `receiver_id=eq.${friendId}`,
-      },
-      (payload) => onInsert(payload.new)
-    );
-    channel.on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `sender_id=eq.${friendId}`,
-      },
-      (payload) => onInsert(payload.new)
-    );
-    channel.subscribe();
+    // We subscribe to events where current user is either sender or receiver,
+    // and let the consumer validate the other party equals friendId.
+    // This avoids missing events due to limited filter syntax.
+    this.getUserId().then((myId) => {
+      if (!myId) return;
+      channel.on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${myId}` },
+        (payload) => onInsert(payload.new)
+      );
+      channel.on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `sender_id=eq.${myId}` },
+        (payload) => onInsert(payload.new)
+      );
+      channel.subscribe();
+    });
     return () => {
       this.supabase.removeChannel(channel);
     };
+  }
+
+  // Find profile by email
+  async findProfileByEmail(email: string) {
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select('id, email, name, avatar_url')
+      .eq('email', email)
+      .maybeSingle();
+    if (error) throw error;
+    return data; // null if not found
   }
 }
 
