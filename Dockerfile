@@ -28,8 +28,8 @@ COPY --from=builder /app/dist/chat-therama-dev/browser /usr/share/nginx/html
 # Add SPA-friendly nginx config
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80
-EXPOSE 80
+# Expose both HTTP and HTTPS
+EXPOSE 80 443
 
 # Install curl for healthcheck
 RUN apk add --no-cache curl

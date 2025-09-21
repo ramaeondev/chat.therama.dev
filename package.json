@@ -1,12 +1,12 @@
 
 {
-  "name": "chat-therama-dev",
-  "private": true,
-  "version": "1.3.0",
+  "name": "QuickChat",
+  "private": false,
+  "version": "1.0.0",
   "type": "module",
   "project_id": "b8edd61e-d04e-4f2e-a7ab-5189aa1c83a8",
   "status": "Production",
-  "description": "A Vite + React + TypeScript + Tailwind CSS + shadcn/ui chat application",
+  "description": "A Vite + Angular + TypeScript + Tailwind CSS + PrimeNG chat application",
   "author": "Ramaeon",
   "license": "MIT",
   "homepage": "chat.therama.dev",

@@ -107,6 +107,119 @@ export class SupabaseService {
     return all.filter((p: any) => p.id !== myId);
   }
 
+  // Contacts: add an explicit contact entry for the current user
+  async addContact(contactId: string) {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+    if (myId === contactId) return; // no-op
+    const { error } = await this.supabase
+      .from('contacts')
+      .upsert({ user_id: myId, contact_id: contactId })
+      .eq('user_id', myId)
+      .eq('contact_id', contactId);
+    if (error) throw error;
+  }
+
+  // Get contact ids for current user
+  private async getContactIds(): Promise<string[]> {
+    const myId = await this.getUserId();
+    if (!myId) return [];
+    const { data, error } = await this.supabase
+      .from('contacts')
+      .select('contact_id')
+      .eq('user_id', myId);
+    if (error) throw error;
+    return (data || []).map((r: any) => r.contact_id as string);
+  }
+
+  // Get distinct counterpart ids from messages involving current user
+  private async getMessageCounterpartIds(): Promise<string[]> {
+    const myId = await this.getUserId();
+    if (!myId) return [];
+    // Fetch minimal columns then compute counterparts client-side
+    const { data, error } = await this.supabase
+      .from('messages')
+      .select('sender_id, receiver_id')
+      .or(`sender_id.eq.${myId},receiver_id.eq.${myId}`)
+      .limit(1000); // basic cap; can be improved with pagination later
+    if (error) throw error;
+    const set = new Set<string>();
+    for (const r of data || []) {
+      const other: string = (r.sender_id === myId ? r.receiver_id : r.sender_id) as string;
+      if (other && other !== myId) set.add(other);
+    }
+    return Array.from(set);
+  }
+
+  // Fetch profiles for a given set of ids
+  private async getProfilesByIds(ids: string[]) {
+    if (!ids.length) return [] as any[];
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select('id, email, name, avatar_url')
+      .in('id', ids);
+    if (error) throw error;
+    return data || [];
+  }
+
+  // Smart friends list: union of contacts + message counterparts
+  async listFriendsSmart() {
+    const [contacts, counterparts] = await Promise.all([
+      this.getContactIds(),
+      this.getMessageCounterpartIds(),
+    ]);
+    const set = new Set<string>([...contacts, ...counterparts]);
+    const ids = Array.from(set);
+    return await this.getProfilesByIds(ids);
+  }
+
+  private async getLastMessagesForIds(otherIds: string[]) {
+    const myId = await this.getUserId();
+    if (!myId || otherIds.length === 0) return {} as Record<string, any>;
+    const { data, error } = await this.supabase
+      .from('messages')
+      .select('id, sender_id, receiver_id, content, created_at')
+      .or(`and(sender_id.eq.${myId},receiver_id.in.(${otherIds.join(',')})),and(receiver_id.eq.${myId},sender_id.in.(${otherIds.join(',')}))`)
+      .order('created_at', { ascending: false })
+      .limit(1000);
+    if (error) throw error;
+    const latestByOther: Record<string, any> = {};
+    for (const m of data || []) {
+      const other = m.sender_id === myId ? m.receiver_id : m.sender_id;
+      if (!latestByOther[other]) {
+        latestByOther[other] = m;
+      }
+    }
+    return latestByOther;
+  }
+
+  async listFriendsSmartWithMeta() {
+    const [contacts, counterparts] = await Promise.all([
+      this.getContactIds(),
+      this.getMessageCounterpartIds(),
+    ]);
+    const set = new Set<string>([...contacts, ...counterparts]);
+    const ids = Array.from(set);
+    const [profiles, latestMap, myId] = await Promise.all([
+      this.getProfilesByIds(ids),
+      this.getLastMessagesForIds(ids),
+      this.getUserId(),
+    ]);
+    const enriched = (profiles as any[]).map((p) => {
+      const m = latestMap[p.id];
+      const last_message_at = m ? m.created_at : null;
+      const last_message_text = m ? (m.content as string) : null;
+      const last_message_from_me = m ? m.sender_id === myId : null;
+      return { ...p, last_message_at, last_message_text, last_message_from_me };
+    });
+    enriched.sort((a, b) => {
+      const ta = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+      const tb = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+      return tb - ta;
+    });
+    return enriched;
+  }
+
   // List messages between current user and friend
   async listMessages(friendId: string) {
     const myId = await this.getUserId();

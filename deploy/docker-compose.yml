@@ -4,9 +4,14 @@ services:
     container_name: chat-therama-web
     ports:
       - "80:80"
+      - "443:443"
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+    volumes:
+      # Mount Cloudflare origin certificates from the EC2 host into the container (read-only)
+      - /etc/ssl/cloudflare/origin.crt:/etc/ssl/cloudflare/origin.crt:ro
+      - /etc/ssl/cloudflare/origin.key:/etc/ssl/cloudflare/origin.key:ro
     logging:
       driver: json-file
       options:

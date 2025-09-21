@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { FooterComponent } from '../shared/footer/footer';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule] ,
+  imports: [ReactiveFormsModule, CommonModule, FooterComponent] ,
   templateUrl: './login.html',
   styleUrls: ['./login.scss']
 })

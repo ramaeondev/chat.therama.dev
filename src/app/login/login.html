@@ -1,7 +1,14 @@
-<div class="max-w-md mx-auto mt-20 p-6 bg-white rounded-xl shadow-md">
-    <h1 class="text-2xl font-bold mb-4">Sign in</h1>
-  
-    <form [formGroup]="form" (ngSubmit)="showOtp() ? verifyOtp() : requestOtp()">
+<div class="min-h-screen flex flex-col bg-gray-100">
+  <div class="flex-1 flex items-start justify-center">
+    <div class="max-w-md w-full mt-20 p-6 bg-white rounded-xl shadow-md">
+      <div class="flex flex-col items-center justify-center mb-6">
+        <img src="/assets/quick-chat.png" 
+             alt="QuickChat" 
+             class="h-20 w-20 sm:h-24 sm:w-24 object-contain mb-2" />
+      </div>
+      <h1 class="text-2xl font-bold mb-4">Sign in</h1>
+
+      <form [formGroup]="form" (ngSubmit)="showOtp() ? verifyOtp() : requestOtp()">
       <!-- Email Field -->
       <div>
         <input
@@ -43,20 +50,22 @@
       >
         {{ loading() ? (showOtp() ? 'Verifying...' : 'Sending...') : (showOtp() ? 'Verify OTP' : 'Get OTP') }}
       </button>
-    </form>
+      </form>
 
-    <p *ngIf="error()" class="mt-4 text-sm text-red-600" aria-live="assertive">{{ error() }}</p>
-    <p *ngIf="!error() && message()" class="mt-2 text-sm text-gray-600" aria-live="polite">{{ message() }}</p>
+      <p *ngIf="error()" class="mt-4 text-sm text-red-600" aria-live="assertive">{{ error() }}</p>
+      <p *ngIf="!error() && message()" class="mt-2 text-sm text-gray-600" aria-live="polite">{{ message() }}</p>
 
-    <div *ngIf="needSignup()" class="mt-2">
-      <button type="button" (click)="goToSignup()" class="w-full bg-gray-100 text-gray-900 py-2 rounded hover:bg-gray-200 border border-gray-300">
-        Go to Signup
-      </button>
-    </div>
+      <div *ngIf="needSignup()" class="mt-2">
+        <button type="button" (click)="goToSignup()" class="w-full bg-gray-100 text-gray-900 py-2 rounded hover:bg-gray-200 border border-gray-300">
+          Go to Signup
+        </button>
+      </div>
 
-    <div class="mt-4 text-center text-sm text-gray-600">
-      <span>Don’t have an account?</span>
-      <button type="button" class="text-blue-600 hover:underline ml-1" (click)="goToSignup()">Sign up</button>
+      <div class="mt-4 text-center text-sm text-gray-600">
+        <span>Don’t have an account?</span>
+        <button type="button" class="text-blue-600 hover:underline ml-1" (click)="goToSignup()">Sign up</button>
+      </div>
     </div>
   </div>
-  
+  <app-footer></app-footer>
+</div>

@@ -2,9 +2,8 @@
   <!-- Topbar -->
   <header class="flex items-center justify-between px-4 py-3 bg-white shadow">
     <div class="flex items-center gap-3">
-      <img src="/assets/logo.png" alt="Logo" class="w-8 h-8" onerror="this.style.display='none'" />
-      <h1 class="text-lg font-semibold">Chat App</h1>
-      <span class="ml-2 text-xs px-2 py-0.5 rounded-full"
+      <img src="/assets/quick-chat.png" alt="QuickChat" class="w-10 h-10" />
+      <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-50 text-gray-700 border ml-2"
             [class.bg-green-100]="realtimeConnected()" [class.text-green-700]="realtimeConnected()"
             [class.bg-gray-100]="!realtimeConnected()" [class.text-gray-600]="!realtimeConnected()">
         {{ realtimeConnected() ? 'Realtime: connected' : 'Realtime: offline' }}
@@ -46,19 +45,29 @@
       </div>
       <ul>
         <li *ngFor="let f of friends()" (click)="selectFriend(f.id)"
-            class="px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center justify-between"
+            class="px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center justify-between gap-3"
             [class.bg-blue-50]="selectedFriendId() === f.id">
-          <div class="flex items-center gap-2 min-w-0">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
             <img *ngIf="f.avatar_url" [src]="f.avatar_url" alt="avatar"
                  class="w-7 h-7 rounded-full object-cover" />
             <div class="min-w-0">
               <div class="truncate text-sm">{{ f.name || f.email }}</div>
-              <div class="text-[10px] text-gray-500 truncate">{{ f.email }}</div>
+              <div class="text-[11px] text-gray-500 truncate">
+                <ng-container *ngIf="f.last_message_text; else noMsg">
+                  <span class="opacity-70" *ngIf="f.last_message_from_me">You: </span>{{ f.last_message_text }}
+                </ng-container>
+                <ng-template #noMsg>
+                  {{ f.email }}
+                </ng-template>
+              </div>
             </div>
           </div>
-          <span class="w-2 h-2 rounded-full"
-                [class.bg-green-500]="onlineIds().includes(f.id)"
-                [class.bg-gray-300]="!onlineIds().includes(f.id)"></span>
+          <div class="flex items-center gap-2">
+            <div class="text-[10px] text-gray-400" *ngIf="f.last_message_at as t">{{ t | date:'shortTime' }}</div>
+            <span class="w-2 h-2 rounded-full"
+                  [class.bg-green-500]="onlineIds().includes(f.id)"
+                  [class.bg-gray-300]="!onlineIds().includes(f.id)"></span>
+          </div>
         </li>
       </ul>
     </aside>
@@ -99,4 +108,5 @@
       </form>
     </main>
   </div>
+  <app-footer></app-footer>
 </div>

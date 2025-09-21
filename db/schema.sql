@@ -53,3 +53,38 @@ create policy "Users can insert messages they send"
   on public.messages for insert
   to authenticated
   with check (sender_id = auth.uid());
+
+-- Add messages table to the realtime publication
+alter publication supabase_realtime add table public.messages;
+
+-- Confirm table is in the publication
+select * from pg_publication_tables where pubname = 'supabase_realtime';
+
+-- Contacts table: stores explicit user contacts (friend-like) added via search
+create table if not exists public.contacts (
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  contact_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamp with time zone default now(),
+  primary key (user_id, contact_id)
+);
+
+alter table public.contacts enable row level security;
+
+-- Policies for contacts
+drop policy if exists "Users can view their contacts" on public.contacts;
+create policy "Users can view their contacts"
+  on public.contacts for select
+  to authenticated
+  using (user_id = auth.uid());
+
+drop policy if exists "Users can insert their contacts" on public.contacts;
+create policy "Users can insert their contacts"
+  on public.contacts for insert
+  to authenticated
+  with check (user_id = auth.uid());
+
+drop policy if exists "Users can delete their contacts" on public.contacts;
+create policy "Users can delete their contacts"
+  on public.contacts for delete
+  to authenticated
+  using (user_id = auth.uid());

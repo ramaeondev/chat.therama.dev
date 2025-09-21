@@ -3,11 +3,12 @@ import { Component, inject, signal, WritableSignal, OnDestroy } from '@angular/c
 import { FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SupabaseService } from '../core/supabase.service';
 import { Router } from '@angular/router';
+import { FooterComponent } from '../shared/footer/footer';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FooterComponent],
   templateUrl: './signup.html',
   styleUrls: ['./signup.scss']
 })

@@ -5,11 +5,12 @@ import { signal } from '@angular/core';
 import { SupabaseService } from '../../core/supabase.service';
 import { Router } from '@angular/router';
 import { UserMetadata } from '@supabase/supabase-js';
+import { FooterComponent } from '../../shared/footer/footer';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FooterComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
@@ -19,7 +20,15 @@ export class Dashboard implements OnDestroy {
   loggingOut = signal<boolean>(false);
 
   // Friends and chat state
-  friends = signal<Array<{ id: string; name?: string | null; email?: string | null; avatar_url?: string | null }>>([]);
+  friends = signal<Array<{
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    avatar_url?: string | null;
+    last_message_at?: string | null;
+    last_message_text?: string | null;
+    last_message_from_me?: boolean | null;
+  }>>([]);
   selectedFriendId = signal<string | null>(null);
   messages = signal<Array<{ id?: string; from: 'me' | 'them'; text: string; at: Date }>>([]);
   private _messageIds = new Set<string>();
@@ -41,7 +50,6 @@ export class Dashboard implements OnDestroy {
   constructor(private supabase: SupabaseService, private router: Router, private fb: NonNullableFormBuilder) {
     // Load current session to show email
     this.supabase.getSession().then((session) => {
-      console.log(session);
       const email = session?.user?.email ?? '';
       this.userEmail.set(email);
       this.user.set(session?.user?.user_metadata ?? null);
@@ -68,7 +76,7 @@ export class Dashboard implements OnDestroy {
   }
 
   async loadFriends() {
-    const list = await this.supabase.listFriends();
+    const list = await this.supabase.listFriendsSmartWithMeta();
     this.friends.set(list);
   }
 
@@ -116,6 +124,8 @@ export class Dashboard implements OnDestroy {
       ]);
     }
     this.messageForm.reset({ text: '' });
+    // Update last message meta for friend and resort
+    await this.refreshFriendMeta(friendId);
   }
 
   async logout() {
@@ -136,15 +146,20 @@ export class Dashboard implements OnDestroy {
     }
     const handler = async (row: any) => {
       const id = String(row.id);
-      if (this._messageIds.has(id)) return;
-      this._messageIds.add(id);
       const myId = await this.supabase.getUserId();
-      // Only append if this event is for the currently selected friend
-      if (this.selectedFriendId() !== friendId) return;
-      this.messages.update((arr) => [
-        ...arr,
-        { id, from: row.sender_id === myId ? 'me' : 'them', text: row.content, at: new Date(row.created_at) },
-      ]);
+      const otherId: string = row.sender_id === myId ? row.receiver_id : row.sender_id;
+      // If this message is for the currently selected friend, append (dedupe first)
+      if (this.selectedFriendId() === otherId) {
+        if (!this._messageIds.has(id)) {
+          this._messageIds.add(id);
+          this.messages.update((arr) => [
+            ...arr,
+            { id, from: row.sender_id === myId ? 'me' : 'them', text: row.content, at: new Date(row.created_at) },
+          ]);
+        }
+      }
+      // Always refresh friend meta for the other party to re-sort sidebar
+      await this.refreshFriendMeta(otherId);
     };
     this._unsubscribe = this.supabase.subscribeToMessages(friendId, handler);
   }
@@ -159,6 +174,22 @@ export class Dashboard implements OnDestroy {
   getFriend(id: string | null) {
     if (!id) return undefined;
     return this.friends().find(p => p.id === id);
+  }
+
+  private async refreshFriendMeta(friendId: string) {
+    // Fetch single friend's meta by getting union with meta and merging this one
+    const metaList = await this.supabase.listFriendsSmartWithMeta();
+    const updated = metaList.find((p: any) => p.id === friendId);
+    if (!updated) return;
+    // Merge and resort
+    const others = this.friends().filter(f => f.id !== friendId);
+    const merged = [updated, ...others];
+    merged.sort((a: any, b: any) => {
+      const ta = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+      const tb = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+      return tb - ta;
+    });
+    this.friends.set(merged as any);
   }
 
   private normalizeEmail(v: string) {
@@ -184,6 +215,8 @@ export class Dashboard implements OnDestroy {
         this.searchError.set('No user found with that email');
         return;
       }
+      // Ensure they are added as a contact so they appear even before first message
+      await this.supabase.addContact(profile.id);
       if (!this.friends().some(f => f.id === profile.id)) {
         this.friends.update(list => [{ id: profile.id, name: profile.name, email: profile.email, avatar_url: profile.avatar_url }, ...list]);
       }

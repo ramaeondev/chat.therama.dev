@@ -1,59 +1,68 @@
-<div class="flex justify-center items-center min-h-screen bg-gray-100">
-  <div class="bg-white p-6 rounded-2xl shadow-md w-full max-w-md">
-    <h2 class="text-2xl font-bold text-center mb-4">Sign Up</h2>
-
-    <form [formGroup]="form" (ngSubmit)="showOtp() ? verifyOtp() : signUp()" class="space-y-4">
-
-      <!-- Name -->
-      <div>
-        <label class="block mb-1 text-sm font-medium">Name</label>
-        <input type="text" formControlName="name" [disabled]="showOtp()"
-          class="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300" />
-        <small class="text-red-600" *ngIf="form.controls.name.invalid && form.controls.name.touched">
-          Name is required
-        </small>
+<div class="min-h-screen flex flex-col bg-gray-100">
+  <div class="flex-1 flex items-start justify-center">
+    <div class="bg-white p-6 rounded-2xl shadow-md w-full max-w-md mt-20">
+      <div class="flex flex-col items-center justify-center mb-6">
+        <img src="/assets/quick-chat.png" 
+             alt="QuickChat" 
+             class="h-20 w-20 sm:h-24 sm:w-24 object-contain mb-2" />
       </div>
+      
+      <h2 class="text-2xl font-bold text-center mb-4">Sign Up</h2>
 
-      <!-- Email -->
-      <div>
-        <label class="block mb-1 text-sm font-medium">Email</label>
-        <input type="email" formControlName="email" [disabled]="showOtp()"
-          class="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300" />
-        <small class="text-red-600" *ngIf="form.controls.email.invalid && form.controls.email.touched">
-          Valid email required
-        </small>
-      </div>
+      <form [formGroup]="form" (ngSubmit)="showOtp() ? verifyOtp() : signUp()" class="space-y-4">
 
-      <!-- OTP Field appears after OTP is sent -->
-      <div *ngIf="showOtp()">
-        <label class="block mb-1 text-sm font-medium">OTP</label>
-        <input type="text" formControlName="otp"
-          class="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300" placeholder="Enter OTP" />
-        <!-- Resend OTP timer/button -->
-        <div class="flex items-center justify-between text-sm text-gray-600 mt-2">
-          <span *ngIf="remainingSeconds() > 0">Resend in {{ formatMMSS(remainingSeconds()) }}</span>
-          <button type="button"
-                  class="text-blue-600 hover:underline disabled:text-gray-400"
-                  (click)="resendOtp()"
-                  [disabled]="remainingSeconds() > 0 || loading()">
-            Resend OTP
-          </button>
+        <!-- Name -->
+        <div>
+          <label class="block mb-1 text-sm font-medium">Name</label>
+          <input type="text" formControlName="name" [disabled]="showOtp()"
+            class="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300" />
+          <small class="text-red-600" *ngIf="form.controls.name.invalid && form.controls.name.touched">
+            Name is required
+          </small>
         </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block mb-1 text-sm font-medium">Email</label>
+          <input type="email" formControlName="email" [disabled]="showOtp()"
+            class="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300" />
+          <small class="text-red-600" *ngIf="form.controls.email.invalid && form.controls.email.touched">
+            Valid email required
+          </small>
+        </div>
+
+        <!-- OTP Field appears after OTP is sent -->
+        <div *ngIf="showOtp()">
+          <label class="block mb-1 text-sm font-medium">OTP</label>
+          <input type="text" formControlName="otp"
+            class="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-300" placeholder="Enter OTP" />
+          <!-- Resend OTP timer/button -->
+          <div class="flex items-center justify-between text-sm text-gray-600 mt-2">
+            <span *ngIf="remainingSeconds() > 0">Resend in {{ formatMMSS(remainingSeconds()) }}</span>
+            <button type="button"
+                    class="text-blue-600 hover:underline disabled:text-gray-400"
+                    (click)="resendOtp()"
+                    [disabled]="remainingSeconds() > 0 || loading()">
+              Resend OTP
+            </button>
+          </div>
+        </div>
+
+        <button type="submit"
+          [disabled]="loading() || (!showOtp() && form.invalid) || (showOtp() && !form.controls.otp.value)"
+          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
+          {{ loading() ? (showOtp() ? 'Verifying...' : 'Sending...') : (showOtp() ? 'Verify OTP' : 'Sign Up with OTP') }}
+        </button>
+      </form>
+
+      <p *ngIf="message()" class="text-green-600 mt-4 text-center">{{ message() }}</p>
+      <p *ngIf="error()" class="text-red-600 mt-4 text-center">{{ error() }}</p>
+
+      <div class="mt-4 text-center text-sm text-gray-600">
+        <span>Already have an account?</span>
+        <button type="button" class="text-blue-600 hover:underline ml-1" (click)="goToSignin()">Sign in</button>
       </div>
-
-      <button type="submit"
-        [disabled]="loading() || (!showOtp() && form.invalid) || (showOtp() && !form.controls.otp.value)"
-        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
-        {{ loading() ? (showOtp() ? 'Verifying...' : 'Sending...') : (showOtp() ? 'Verify OTP' : 'Sign Up with OTP') }}
-      </button>
-    </form>
-
-    <p *ngIf="message()" class="text-green-600 mt-4 text-center">{{ message() }}</p>
-    <p *ngIf="error()" class="text-red-600 mt-4 text-center">{{ error() }}</p>
-
-    <div class="mt-4 text-center text-sm text-gray-600">
-      <span>Already have an account?</span>
-      <button type="button" class="text-blue-600 hover:underline ml-1" (click)="goToSignin()">Sign in</button>
     </div>
   </div>
+  <app-footer></app-footer>
 </div>
