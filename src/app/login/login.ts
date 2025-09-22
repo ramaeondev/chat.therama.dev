@@ -56,7 +56,7 @@ export class Login implements OnDestroy {
       const msg = err?.message || '';
       const code = err?.code || '';
       if (code === 'otp_disabled' || msg.toLowerCase().includes('signups not allowed for otp')) {
-        this.error.set('Signups via OTP are disabled for this email. Please sign up first.');
+        this.error.set('There was a problem logging in. Check your email or create an account.');
         this.needSignup.set(true);
         this.showOtp.set(false);
         this.clearTimer();

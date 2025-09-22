@@ -88,3 +88,52 @@ create policy "Users can delete their contacts"
   on public.contacts for delete
   to authenticated
   using (user_id = auth.uid());
+
+  -- Ensure RLS is enabled on storage.objects (usually enabled by default)
+  -- alter table storage.objects enable row level security;
+
+-- Optional: remove any previous conflicting policies for this bucket
+-- drop policy if exists "chat-insert-own" on storage.objects;
+-- drop policy if exists "chat-select-own" on storage.objects;
+-- drop policy if exists "chat-update-own" on storage.objects;
+-- drop policy if exists "chat-delete-own" on storage.objects;
+
+-- Insert (upload) only to your own folder: <user_id>/...
+create policy "chat-insert-own"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'chat.therama.dev'
+  and (auth.uid()::text || '/') = split_part(name, '/', 1) || '/'
+);
+
+-- Select (needed for createSignedUrl) from your own objects
+create policy "chat-select-own"
+on storage.objects for select
+to authenticated
+using (
+  bucket_id = 'chat.therama.dev'
+  and (auth.uid()::text || '/') = split_part(name, '/', 1) || '/'
+);
+
+-- Update (optional) your own objects
+create policy "chat-update-own"
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'chat.therama.dev'
+  and (auth.uid()::text || '/') = split_part(name, '/', 1) || '/'
+)
+with check (
+  bucket_id = 'chat.therama.dev'
+  and (auth.uid()::text || '/') = split_part(name, '/', 1) || '/'
+);
+
+-- Delete (optional) your own objects
+create policy "chat-delete-own"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'chat.therama.dev'
+  and (auth.uid()::text || '/') = split_part(name, '/', 1) || '/'
+);

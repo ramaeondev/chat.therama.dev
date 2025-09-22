@@ -93,18 +93,54 @@
           <div [class.bg-blue-600]="m.from === 'me'" [class.text-white]="m.from === 'me'"
                [class.bg-white]="m.from === 'them'" [class.text-gray-800]="m.from === 'them'"
                class="px-3 py-2 rounded-lg shadow max-w-[70%]">
-            <p class="whitespace-pre-line">{{ m.text }}</p>
+            <!-- Attachment rendering -->
+            <ng-container *ngIf="m.attachment as a; else textOnly">
+              <div class="space-y-2">
+                <ng-container *ngIf="a.url; else urlLoading">
+                  <a *ngIf="!isImageMime(a.mime)" [href]="a.url" target="_blank" rel="noopener" class="underline break-all">
+                    {{ a.name }}
+                  </a>
+                  <img *ngIf="isImageMime(a.mime)" [src]="a.url" alt="attachment" class="rounded max-h-64 object-contain" />
+                </ng-container>
+                <ng-template #urlLoading>
+                  <div class="text-xs text-gray-500">Loading attachment…</div>
+                </ng-template>
+                <p *ngIf="a.text" class="whitespace-pre-line">{{ a.text }}</p>
+              </div>
+            </ng-container>
+            <ng-template #textOnly>
+              <p class="whitespace-pre-line">{{ m.text }}</p>
+            </ng-template>
             <div class="text-[11px] opacity-70 mt-1">{{ m.at | date:'shortTime' }}</div>
           </div>
         </div>
       </div>
 
       <!-- Composer -->
-      <form [formGroup]="messageForm" (ngSubmit)="sendMessage()" class="p-3 bg-white border-t flex gap-2">
-        <input type="text" formControlName="text" placeholder="Type a message"
-               class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200" />
-        <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-                [disabled]="messageForm.invalid">Send</button>
+      <form [formGroup]="messageForm" (ngSubmit)="sendMessage()" class="p-3 bg-white border-t space-y-2">
+        <div class="flex items-center gap-2">
+          <button type="button" (click)="showEmoji.set(!showEmoji())" class="px-2 py-2 rounded border text-sm">
+            😊
+          </button>
+          <label class="px-2 py-2 rounded border text-sm cursor-pointer">
+            📎
+            <input type="file" (change)="onFileSelected($event)" [disabled]="uploading()" class="hidden" [attr.accept]="ACCEPTED_MIME_LIST.join(',')" />
+          </label>
+          <span class="text-xs text-gray-500" *ngIf="uploading()">Uploading...</span>
+          <input type="text" formControlName="text" placeholder="Type a message or caption"
+                 class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200" />
+          <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  [disabled]="messageForm.invalid">Send</button>
+        </div>
+        <!-- Validation error for uploads -->
+        <div *ngIf="uploadError()" class="text-xs text-red-600" role="alert" aria-live="polite">{{ uploadError() }}</div>
+
+        <!-- Full emoji picker -->
+        <app-emoji-picker
+          *ngIf="showEmoji()"
+          (emojiSelect)="onEmojiSelected($event)"
+          (closed)="onEmojiClosed()"
+        ></app-emoji-picker>
       </form>
     </main>
   </div>

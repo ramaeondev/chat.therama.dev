@@ -15,6 +15,8 @@ QuickChat is a modern real-time chat application built with Angular and Supabase
 - Responsive UI (Tailwind CSS)
 - CI/CD via GitHub Actions → ECR Public → EC2 (docker compose)
 - HTTPS with Cloudflare Origin Certificates (Nginx)
+ - Attachments (images, videos, docs, archives) with client-side validation and previews
+ - Emoji picker (full catalogue) using `emoji-picker-element`
 
 ## Prerequisites
 
@@ -33,6 +35,13 @@ QuickChat is a modern real-time chat application built with Angular and Supabase
 4. Run: `npm start`
 5. Open `http://localhost:4200`
 
+Attachments & Emoji setup:
+
+1. Create a private Supabase Storage bucket named `chat.therama.dev`.
+2. Add Storage RLS policies to allow insert/select/update/delete for objects owned by the user (prefix `${auth.uid()}/...`).
+3. Install emoji picker dependency (already included): `emoji-picker-element`.
+4. The UI provides a paperclip to attach files and a smiley button to open the emoji picker.
+
 ## Backend (Supabase)
 
 Tables and RLS summary:
@@ -43,6 +52,15 @@ Tables and RLS summary:
   - Realtime publication added for `public.messages`
 - `contacts(user_id uuid, contact_id uuid, created_at timestamptz)`
   - RLS: select/insert/delete allowed where `user_id = auth.uid()`
+
+Storage (attachments):
+
+- Private bucket: `chat.therama.dev`
+- RLS policies on `storage.objects` scope access to the owner’s prefix `${auth.uid()}/...`
+- App stores only storage `path` in message payloads; signed URLs are generated on demand for rendering
+- Client-side validation:
+  - Max size: 1 MB
+  - Allowed MIME types: see `src/app/feature/dashboard/dashboard.ts` `ACCEPTED_MIME_LIST`
 
 Friends list logic:
 
@@ -167,3 +185,7 @@ For more information on using the Angular CLI, including detailed command refere
 ---
 
 Made with ❤️ from therama.dev
+
+## Release Notes
+
+See `CHANGELOG.md` for detailed release notes. Latest: `2.0.0` adds attachments, private storage with signed URLs, and a full emoji picker.

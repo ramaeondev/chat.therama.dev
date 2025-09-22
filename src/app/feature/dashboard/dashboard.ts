@@ -6,11 +6,12 @@ import { SupabaseService } from '../../core/supabase.service';
 import { Router } from '@angular/router';
 import { UserMetadata } from '@supabase/supabase-js';
 import { FooterComponent } from '../../shared/footer/footer';
+import { EmojiPickerComponent } from '../../shared/emoji-picker/emoji-picker';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FooterComponent],
+  imports: [CommonModule, ReactiveFormsModule, FooterComponent, EmojiPickerComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
@@ -30,7 +31,13 @@ export class Dashboard implements OnDestroy {
     last_message_from_me?: boolean | null;
   }>>([]);
   selectedFriendId = signal<string | null>(null);
-  messages = signal<Array<{ id?: string; from: 'me' | 'them'; text: string; at: Date }>>([]);
+  messages = signal<Array<{
+    id?: string;
+    from: 'me' | 'them';
+    at: Date;
+    text?: string;
+    attachment?: { path: string; name: string; mime: string; text?: string; url?: string };
+  }>>([]);
   private _messageIds = new Set<string>();
   private _unsubscribe: (() => void) | null = null;
   user: WritableSignal<UserMetadata | null> = signal<UserMetadata | null>(null);
@@ -46,6 +53,22 @@ export class Dashboard implements OnDestroy {
   searchError = signal<string>('');
 
   messageForm!: FormGroup;
+  // UI state
+  showEmoji = signal<boolean>(false);
+  uploading = signal<boolean>(false);
+  uploadError = signal<string>('');
+
+  // File restrictions (mirror Supabase bucket policies/settings)
+  readonly MAX_UPLOAD_BYTES = 1 * 1024 * 1024; // 1 MB
+  readonly ACCEPTED_MIME_LIST = [
+    'image/jpeg','image/png','image/gif','image/webp','image/svg+xml','image/x-icon','image/bmp','image/tiff','image/heic','image/heif',
+    'video/mp4','video/webm','video/ogg','video/x-msvideo','video/quicktime','video/mpeg','video/3gpp','video/x-matroska','video/x-ms-wmv',
+    'application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/zip','application/x-rar-compressed','application/x-7z-compressed','application/gzip',
+    'text/plain','text/csv','application/json'
+  ];
 
   constructor(private supabase: SupabaseService, private router: Router, private fb: NonNullableFormBuilder) {
     // Load current session to show email
@@ -62,6 +85,108 @@ export class Dashboard implements OnDestroy {
     this.messageForm = this.fb.group({
       text: ['', [Validators.required]],
     });
+  }
+
+  // --- Attachments & Emojis ---
+  addEmoji(emoji: string) {
+    const control = this.messageForm.get('text');
+    const current = (control?.value as string) ?? '';
+    control?.setValue(current + emoji);
+  }
+
+  onEmojiSelected(emoji: string) {
+    this.addEmoji(emoji);
+    this.showEmoji.set(false);
+  }
+
+  onEmojiClosed() {
+    this.showEmoji.set(false);
+  }
+
+  async onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files && input.files[0];
+    if (!file) return;
+    const friendId = this.selectedFriendId();
+    if (!friendId) return;
+    try {
+      this.uploadError.set('');
+      // Validate size
+      if (file.size > this.MAX_UPLOAD_BYTES) {
+        this.uploadError.set(`File is too large. Max size is ${(this.MAX_UPLOAD_BYTES/1024/1024).toFixed(0)} MB.`);
+        return;
+      }
+      // Validate MIME
+      const mime = (file.type || '').toLowerCase();
+      if (!this.ACCEPTED_MIME_LIST.includes(mime)) {
+        this.uploadError.set('This file type is not allowed.');
+        return;
+      }
+      this.uploading.set(true);
+      const { path } = await this.supabase.uploadAttachment(file);
+      const caption = (this.messageForm.getRawValue().text || '').trim();
+      const row = await this.supabase.sendAttachmentMessage(friendId, {
+        path,
+        name: file.name,
+        mime: mime || 'application/octet-stream',
+        text: caption || undefined,
+      });
+      const id = String(row.id);
+      if (!this._messageIds.has(id)) {
+        this._messageIds.add(id);
+        const myId = await this.supabase.getUserId();
+        const parsed = this.parseMessageContent(row.content as string);
+        this.messages.update((arr) => [
+          ...arr,
+          { id, from: row.sender_id === myId ? 'me' : 'them', at: new Date(row.created_at), ...parsed },
+        ]);
+        if (parsed.attachment?.path) {
+          this.enrichAttachmentUrl(id, parsed.attachment.path);
+        }
+      }
+      // Clear caption after sending attachment
+      this.messageForm.reset({ text: '' });
+      await this.refreshFriendMeta(friendId);
+    } catch (e) {
+      console.error('Failed to upload/send attachment', e);
+      this.uploadError.set('Upload failed. Please try again.');
+      // Optional: surface to UI via a toast/snackbar
+    } finally {
+      this.uploading.set(false);
+      if (input) input.value = '';
+    }
+  }
+
+  isImageMime(mime: string) {
+    return /^image\//.test(mime);
+  }
+
+  private parseMessageContent(content: string): { text?: string; attachment?: { path: string; name: string; mime: string; text?: string } } {
+    // Try to parse JSON payloads for attachments; fallback to plain text
+    try {
+      const obj = JSON.parse(content);
+      if (obj && obj.type === 'attachment' && obj.path && obj.name && obj.mime) {
+        return { attachment: { path: obj.path, name: obj.name, mime: obj.mime, text: obj.text || '' } };
+      }
+      // If JSON but not recognized, show raw stringified content
+      return { text: content };
+    } catch {
+      return { text: content };
+    }
+  }
+
+  private async enrichAttachmentUrl(messageId: string, path: string) {
+    try {
+      const url = await this.supabase.getSignedUrl(path);
+      this.messages.update((arr) => arr.map(m => {
+        if (m.id === messageId && m.attachment && m.attachment.path === path) {
+          return { ...m, attachment: { ...m.attachment, url } };
+        }
+        return m;
+      }));
+    } catch (e) {
+      console.error('Failed to sign URL for attachment', e);
+    }
   }
 
   async initialize() {
@@ -95,14 +220,21 @@ export class Dashboard implements OnDestroy {
     const mapped = rows.map((r: any) => {
       const id = String(r.id);
       this._messageIds.add(id);
+      const parsed = this.parseMessageContent(r.content as string);
       return {
         id,
         from: r.sender_id === myId ? 'me' : 'them',
-        text: r.content as string,
         at: new Date(r.created_at),
+        ...parsed,
       } as const;
     });
     this.messages.set(mapped);
+    // Resolve signed URLs for any attachments
+    for (const m of mapped) {
+      if (m.id && m.attachment?.path) {
+        this.enrichAttachmentUrl(m.id, m.attachment.path);
+      }
+    }
   }
 
   async sendMessage() {
@@ -118,9 +250,10 @@ export class Dashboard implements OnDestroy {
     if (!this._messageIds.has(id)) {
       this._messageIds.add(id);
       const myId = await this.supabase.getUserId();
+      const parsed = this.parseMessageContent(row.content as string);
       this.messages.update((arr) => [
         ...arr,
-        { id, from: row.sender_id === myId ? 'me' : 'them', text: row.content, at: new Date(row.created_at) },
+        { id, from: row.sender_id === myId ? 'me' : 'them', at: new Date(row.created_at), ...parsed },
       ]);
     }
     this.messageForm.reset({ text: '' });
@@ -152,10 +285,14 @@ export class Dashboard implements OnDestroy {
       if (this.selectedFriendId() === otherId) {
         if (!this._messageIds.has(id)) {
           this._messageIds.add(id);
+          const parsed = this.parseMessageContent(row.content as string);
           this.messages.update((arr) => [
             ...arr,
-            { id, from: row.sender_id === myId ? 'me' : 'them', text: row.content, at: new Date(row.created_at) },
+            { id, from: row.sender_id === myId ? 'me' : 'them', at: new Date(row.created_at), ...parsed },
           ]);
+          if (parsed.attachment?.path) {
+            this.enrichAttachmentUrl(id, parsed.attachment.path);
+          }
         }
       }
       // Always refresh friend meta for the other party to re-sort sidebar

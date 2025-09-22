@@ -208,7 +208,20 @@ export class SupabaseService {
     const enriched = (profiles as any[]).map((p) => {
       const m = latestMap[p.id];
       const last_message_at = m ? m.created_at : null;
-      const last_message_text = m ? (m.content as string) : null;
+      let last_message_text: string | null = null;
+      if (m) {
+        const raw = m.content as string;
+        try {
+          const obj = JSON.parse(raw);
+          if (obj && obj.type === 'attachment') {
+            last_message_text = obj.text ? `📎 ${obj.text}` : `📎 ${obj.name || 'Attachment'}`;
+          } else {
+            last_message_text = raw;
+          }
+        } catch {
+          last_message_text = raw;
+        }
+      }
       const last_message_from_me = m ? m.sender_id === myId : null;
       return { ...p, last_message_at, last_message_text, last_message_from_me };
     });
@@ -243,6 +256,50 @@ export class SupabaseService {
       .single();
     if (error) throw error;
     return data;
+  }
+
+  // Upload an attachment to a private Supabase Storage bucket and return its storage path.
+  // Ensure a bucket named "attachments" exists in your Supabase project.
+  // Access is private; clients should request signed URLs using getSignedUrl.
+  async uploadAttachment(file: File): Promise<{ path: string }> {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+    const bucket = 'chat.therama.dev';
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const rand = Math.random().toString(36).slice(2, 8);
+    const path = `${myId}/${Date.now()}_${rand}.${ext}`;
+    const { error: uploadError } = await this.supabase.storage
+      .from(bucket)
+      .upload(path, file, { contentType: file.type, upsert: false });
+    if (uploadError) throw uploadError;
+    return { path };
+  }
+
+  // Send a message whose content is a JSON-encoded attachment payload.
+  // This avoids database schema changes by keeping everything in the text
+  // column and decoding client-side.
+  async sendAttachmentMessage(
+    friendId: string,
+    meta: { path: string; name: string; mime: string; text?: string }
+  ) {
+    const payload = {
+      type: 'attachment',
+      path: meta.path,
+      name: meta.name,
+      mime: meta.mime,
+      text: meta.text || '',
+    };
+    return await this.sendMessage(friendId, JSON.stringify(payload));
+  }
+
+  // Generate a signed URL for a given storage path in the attachments bucket.
+  async getSignedUrl(path: string, expiresInSeconds = 3600): Promise<string> {
+    const bucket = 'chat.therama.dev';
+    const { data, error } = await this.supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, expiresInSeconds);
+    if (error) throw error;
+    return data.signedUrl;
   }
 
   subscribeToMessages(friendId: string, onInsert: (row: any) => void) {
