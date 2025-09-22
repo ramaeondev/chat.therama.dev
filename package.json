@@ -1,10 +1,10 @@
 {
-  "name": "QuickChat",
+  "name": "chat-therama-dev",
   "private": false,
   "version": "2.0.0",
   "type": "module",
   "project_id": "b8edd61e-d04e-4f2e-a7ab-5189aa1c83a8",
-  "status": "Production",
+  "status": "Under Development",
   "description": "Angular + Supabase real-time chat (Tailwind). Docker + Nginx on EC2 with HTTPS.",
   "author": "Ramaeon",
   "license": "MIT",

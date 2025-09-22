@@ -100,7 +100,7 @@
                   <a *ngIf="!isImageMime(a.mime)" [href]="a.url" target="_blank" rel="noopener" class="underline break-all">
                     {{ a.name }}
                   </a>
-                  <img *ngIf="isImageMime(a.mime)" [src]="a.url" alt="attachment" class="rounded max-h-64 object-contain" />
+                  <img *ngIf="isImageMime(a.mime)" [src]="a.url" alt="attachment" class="rounded max-h-64 object-contain" (error)="onAttachmentImageError(m.id!)" />
                 </ng-container>
                 <ng-template #urlLoading>
                   <div class="text-xs text-gray-500">Loading attachment…</div>
@@ -116,9 +116,13 @@
         </div>
       </div>
 
-      <!-- Composer -->
-      <form [formGroup]="messageForm" (ngSubmit)="sendMessage()" class="p-3 bg-white border-t space-y-2">
-        <div class="flex items-center gap-2">
+      <!-- Composer with Drop Zone -->
+      <form [formGroup]="messageForm" (ngSubmit)="sendMessage()"
+            class="p-3 bg-white border-t space-y-2"
+            (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+        <div class="flex items-center gap-2 border-2 border-dashed rounded p-2"
+             [class.border-blue-400]="dragging()" [class.border-gray-200]="!dragging()"
+             [class.bg-blue-50]="dragging()">
           <button type="button" (click)="showEmoji.set(!showEmoji())" class="px-2 py-2 rounded border text-sm">
             😊
           </button>
@@ -131,6 +135,15 @@
                  class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200" />
           <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
                   [disabled]="messageForm.invalid">Send</button>
+        </div>
+        <!-- Drop hint -->
+        <div *ngIf="dragging()" class="text-xs text-blue-700">Drop a file anywhere in this box to upload</div>
+        <!-- Upload progress (determinate) -->
+        <div *ngIf="uploading()" class="w-full">
+          <div class="w-full h-2 bg-gray-100 rounded">
+            <div class="h-2 bg-blue-500 rounded" [style.width.%]="uploadProgress()"></div>
+          </div>
+          <div class="text-[11px] text-gray-500 mt-1">Uploading {{ uploadProgress() }}%</div>
         </div>
         <!-- Validation error for uploads -->
         <div *ngIf="uploadError()" class="text-xs text-red-600" role="alert" aria-live="polite">{{ uploadError() }}</div>

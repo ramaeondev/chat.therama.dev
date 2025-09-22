@@ -57,6 +57,8 @@ export class Dashboard implements OnDestroy {
   showEmoji = signal<boolean>(false);
   uploading = signal<boolean>(false);
   uploadError = signal<string>('');
+  dragging = signal<boolean>(false);
+  uploadProgress = signal<number>(0); // 0..100
 
   // File restrictions (mirror Supabase bucket policies/settings)
   readonly MAX_UPLOAD_BYTES = 1 * 1024 * 1024; // 1 MB
@@ -123,7 +125,8 @@ export class Dashboard implements OnDestroy {
         return;
       }
       this.uploading.set(true);
-      const { path } = await this.supabase.uploadAttachment(file);
+      this.uploadProgress.set(0);
+      const { path } = await this.supabase.uploadAttachmentWithProgress(file, (pct) => this.uploadProgress.set(pct));
       const caption = (this.messageForm.getRawValue().text || '').trim();
       const row = await this.supabase.sendAttachmentMessage(friendId, {
         path,
@@ -153,6 +156,7 @@ export class Dashboard implements OnDestroy {
       // Optional: surface to UI via a toast/snackbar
     } finally {
       this.uploading.set(false);
+      this.uploadProgress.set(0);
       if (input) input.value = '';
     }
   }
@@ -189,6 +193,102 @@ export class Dashboard implements OnDestroy {
     }
   }
 
+  // Retry logic on image error (e.g., expired URL): re-sign once
+  private _retrySet = new Set<string>();
+  onAttachmentImageError(messageId: string) {
+    const key = messageId;
+    if (this._retrySet.has(key)) return; // avoid infinite retries
+    this._retrySet.add(key);
+    const m = this.messages().find(mm => mm.id === messageId);
+    if (m?.attachment?.path) {
+      this.enrichAttachmentUrl(messageId, m.attachment.path);
+      // Clear retry flag after a short delay to allow a future retry if needed
+      setTimeout(() => this._retrySet.delete(key), 60_000);
+    }
+  }
+
+  // Periodically refresh signed URLs for visible messages
+  private _refreshHandle: any;
+  startSignedUrlRefresh(intervalMs = 30 * 60 * 1000) { // 30 minutes
+    if (this._refreshHandle) clearInterval(this._refreshHandle);
+    this._refreshHandle = setInterval(() => {
+      const current = this.messages();
+      for (const m of current) {
+        if (m.id && m.attachment?.path) {
+          this.enrichAttachmentUrl(m.id, m.attachment.path);
+        }
+      }
+    }, intervalMs);
+  }
+
+  // --- Drag & Drop ---
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    this.dragging.set(true);
+  }
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    this.dragging.set(false);
+  }
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    this.dragging.set(false);
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      // Process only the first file for now; can be extended to multiple
+      const f = files[0];
+      // Reuse validation and upload path via a helper
+      this.handleFileUpload(f);
+    }
+  }
+
+  private async handleFileUpload(file: File) {
+    const friendId = this.selectedFriendId();
+    if (!friendId) return;
+    try {
+      this.uploadError.set('');
+      if (file.size > this.MAX_UPLOAD_BYTES) {
+        this.uploadError.set(`File is too large. Max size is ${(this.MAX_UPLOAD_BYTES/1024/1024).toFixed(0)} MB.`);
+        return;
+      }
+      const mime = (file.type || '').toLowerCase();
+      if (!this.ACCEPTED_MIME_LIST.includes(mime)) {
+        this.uploadError.set('This file type is not allowed.');
+        return;
+      }
+      this.uploading.set(true);
+      const { path } = await this.supabase.uploadAttachment(file);
+      const caption = (this.messageForm.getRawValue().text || '').trim();
+      const row = await this.supabase.sendAttachmentMessage(friendId, {
+        path,
+        name: file.name,
+        mime: mime || 'application/octet-stream',
+        text: caption || undefined,
+      });
+      const id = String(row.id);
+      if (!this._messageIds.has(id)) {
+        this._messageIds.add(id);
+        const myId = await this.supabase.getUserId();
+        const parsed = this.parseMessageContent(row.content as string);
+        this.messages.update((arr) => [
+          ...arr,
+          { id, from: row.sender_id === myId ? 'me' : 'them', at: new Date(row.created_at), ...parsed },
+        ]);
+        if (parsed.attachment?.path) {
+          this.enrichAttachmentUrl(id, parsed.attachment.path);
+        }
+      }
+      this.messageForm.reset({ text: '' });
+      await this.refreshFriendMeta(friendId);
+    } catch (e) {
+      console.error('Failed to upload/send attachment', e);
+      this.uploadError.set('Upload failed. Please try again.');
+    } finally {
+      this.uploading.set(false);
+      this.uploadProgress.set(0);
+    }
+  }
+
   async initialize() {
     await this.supabase.upsertProfileFromAuth();
     await this.loadFriends();
@@ -198,6 +298,8 @@ export class Dashboard implements OnDestroy {
     }
     // Setup presence after ensuring we have a user
     await this.setupPresence();
+    // Kick off periodic refresh of signed URLs
+    this.startSignedUrlRefresh();
   }
 
   async loadFriends() {
@@ -395,5 +497,6 @@ export class Dashboard implements OnDestroy {
   ngOnDestroy(): void {
     if (this._unsubscribe) this._unsubscribe();
     if (this._unsubPresence) this._unsubPresence();
+    if (this._refreshHandle) clearInterval(this._refreshHandle);
   }
 }

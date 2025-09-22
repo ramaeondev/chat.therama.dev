@@ -15,6 +15,45 @@ export class SupabaseService {
     );
   }
 
+  // Upload with progress using XMLHttpRequest directly to the Storage REST API.
+  // Progress callback receives values from 0 to 100.
+  async uploadAttachmentWithProgress(file: File, onProgress: (pct: number) => void): Promise<{ path: string }> {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+    const bucket = 'chat.therama.dev';
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const rand = Math.random().toString(36).slice(2, 8);
+    const path = `${myId}/${Date.now()}_${rand}.${ext}`;
+
+    const { data: sessionData } = await this.supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) throw new Error('Missing access token');
+
+    const url = `${environment.supabaseUrl}/storage/v1/object/${encodeURIComponent(bucket)}/${encodeURIComponent(path)}`;
+
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+      // Let the server infer content-type from the blob; set if available
+      if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+      xhr.upload.onprogress = (e: ProgressEvent) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          onProgress(pct);
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.send(file);
+    });
+
+    return { path };
+  }
+
   // Presence helpers
   presenceJoin(
     room: string,
