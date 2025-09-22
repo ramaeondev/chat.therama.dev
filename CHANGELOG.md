@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [2.1.0] - 2025-09-23
+
+### Added
+- Profile dialog with circular avatar cropper using `ngx-image-cropper`.
+- Improved header: larger logo and title/subtitle next to it.
+
+### Changed
+- What’s New dialog now loads from `assets/CHANGELOG.md` (fixes 404 in production).
+- CI workflow copies root `CHANGELOG.md` into `src/assets/CHANGELOG.md` during build so it is served at `/assets/CHANGELOG.md`.
+
+### Security
+- Avatar uploads go to the private Storage bucket (`chat.therama.dev`) and the profile is updated with a signed URL.
+
+
 ## [2.0.0] - 2025-09-23
 
 ### Added
