@@ -9,11 +9,12 @@ import { FooterComponent } from '../../shared/footer/footer';
 import { EmojiPickerComponent } from '../../shared/emoji-picker/emoji-picker';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ImageCropperComponent } from 'ngx-image-cropper';
+import { UserAvatarComponent } from '../../shared/user-avatar/user-avatar';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FooterComponent, EmojiPickerComponent, HttpClientModule, ImageCropperComponent],
+  imports: [CommonModule, ReactiveFormsModule, FooterComponent, EmojiPickerComponent, HttpClientModule, ImageCropperComponent, UserAvatarComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
