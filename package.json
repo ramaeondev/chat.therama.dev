@@ -1,5 +1,5 @@
 {
-  "name": "chat-therama-dev",
+  "name": "QuickChat",
   "private": false,
   "version": "2.0.1",
   "type": "module",
@@ -51,9 +51,9 @@
     "HTTPS with Nginx + Cloudflare Origin certs",
     "CI/CD: GitHub Actions → ECR Public → EC2",
     "Footer branding with therama.dev"
-  ],
-  "update_project_version": "https://apps.therama.dev/functions/v1/update-project-version",
-  "log_deployment": "https://apps.therama.dev/functions/v1/log-deployment",
+  ],  
+  "update_project_version": "https://api.therama.dev/functions/v1/update-project-version",  
+  "log_deployment": "https://api.therama.dev/functions/v1/log-deployment",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -88,6 +88,7 @@
     "@supabase/supabase-js": "^2.57.4",
     "chart.js": "4.4.2",
     "emoji-picker-element": "^1.27.0",
+    "ngx-image-cropper": "^9.1.5",
     "primeclt": "^0.1.5",
     "primeicons": "^7.0.0",
     "primeng": "^20",

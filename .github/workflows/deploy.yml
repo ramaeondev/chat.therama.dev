@@ -30,6 +30,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Copy CHANGELOG into assets
+        run: |
+          mkdir -p src/assets
+          cp CHANGELOG.md src/assets/CHANGELOG.md
+
       - name: Validate SSH key is present
         run: |
           if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then

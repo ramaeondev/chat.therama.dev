@@ -15,6 +15,64 @@ export class SupabaseService {
     );
   }
 
+  async getMyProfile(): Promise<{ id: string; email: string | null; name: string | null; avatar_url: string | null } | null> {
+    const myId = await this.getUserId();
+    if (!myId) return null;
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select('id, email, name, avatar_url')
+      .eq('id', myId)
+      .maybeSingle();
+    if (error) throw error;
+    return data as any;
+  }
+
+  // Update profile name (non-null)
+  async updateProfileName(name: string) {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+    if (!name || !name.trim()) throw new Error('Name cannot be empty');
+    const { error } = await this.supabase
+      .from('profiles')
+      .update({ name: name.trim() })
+      .eq('id', myId);
+    if (error) throw error;
+  }
+
+  // Upload avatar and return a signed URL, and optionally update profile.avatar_url
+  async uploadAvatar(file: File, updateProfile = true): Promise<{ path: string; url: string }> {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+    const bucket = 'chat.therama.dev';
+    const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+    const path = `${myId}/avatar.${ext}`;
+    // Overwrite allowed: use upsert true via REST XHR for consistent behavior
+    const { data: sessionData } = await this.supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) throw new Error('Missing access token');
+    const urlUpload = `${environment.supabaseUrl}/storage/v1/object/${encodeURIComponent(bucket)}/${encodeURIComponent(path)}`;
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', urlUpload);
+      xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+      xhr.setRequestHeader('x-upsert', 'true');
+      if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(`Avatar upload failed with status ${xhr.status}: ${xhr.responseText}`));
+      };
+      xhr.onerror = () => reject(new Error('Network error during avatar upload'));
+      xhr.send(file);
+    });
+    // Create a long-lived signed URL (e.g., 30 days); can refresh later if needed
+    const signed = await this.getSignedUrl(path, 30 * 24 * 3600);
+    if (updateProfile) {
+      const { error } = await this.supabase.from('profiles').update({ avatar_url: signed }).eq('id', myId);
+      if (error) throw error;
+    }
+    return { path, url: signed };
+  }
+
   // Upload with progress using XMLHttpRequest directly to the Storage REST API.
   // Progress callback receives values from 0 to 100.
   async uploadAttachmentWithProgress(file: File, onProgress: (pct: number) => void): Promise<{ path: string }> {

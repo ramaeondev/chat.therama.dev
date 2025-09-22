@@ -7,11 +7,13 @@ import { Router } from '@angular/router';
 import { UserMetadata } from '@supabase/supabase-js';
 import { FooterComponent } from '../../shared/footer/footer';
 import { EmojiPickerComponent } from '../../shared/emoji-picker/emoji-picker';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { ImageCropperComponent } from 'ngx-image-cropper';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FooterComponent, EmojiPickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, FooterComponent, EmojiPickerComponent, HttpClientModule, ImageCropperComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
@@ -60,6 +62,17 @@ export class Dashboard implements OnDestroy {
   dragging = signal<boolean>(false);
   uploadProgress = signal<number>(0); // 0..100
 
+  // Topbar profile/menu/dialog state
+  showMenu = signal<boolean>(false);
+  showProfileDialog = signal<boolean>(false);
+  showWhatsNewDialog = signal<boolean>(false);
+  profileName = signal<string>('');
+  profileAvatarUrl = signal<string | null>(null);
+  changelog = signal<string>('');
+  cropping = signal<boolean>(false);
+  imageChangedEvent: any = null;
+  croppedImageBase64: string | null = null;
+
   // File restrictions (mirror Supabase bucket policies/settings)
   readonly MAX_UPLOAD_BYTES = 1 * 1024 * 1024; // 1 MB
   readonly ACCEPTED_MIME_LIST = [
@@ -72,7 +85,7 @@ export class Dashboard implements OnDestroy {
     'text/plain','text/csv','application/json'
   ];
 
-  constructor(private supabase: SupabaseService, private router: Router, private fb: NonNullableFormBuilder) {
+  constructor(private supabase: SupabaseService, private router: Router, private fb: NonNullableFormBuilder, private http: HttpClient) {
     // Load current session to show email
     this.supabase.getSession().then((session) => {
       const email = session?.user?.email ?? '';
@@ -87,6 +100,79 @@ export class Dashboard implements OnDestroy {
     this.messageForm = this.fb.group({
       text: ['', [Validators.required]],
     });
+  }
+
+  // --- Topbar avatar menu & dialogs ---
+  toggleMenu() {
+    this.showMenu.set(!this.showMenu());
+  }
+  openProfile() {
+    this.showMenu.set(false);
+    this.showProfileDialog.set(true);
+  }
+  openWhatsNew() {
+    this.showMenu.set(false);
+    this.showWhatsNewDialog.set(true);
+    this.loadChangelog();
+  }
+  closeDialogs() {
+    this.showProfileDialog.set(false);
+    this.showWhatsNewDialog.set(false);
+  }
+  avatarInitials(): string {
+    const n = (this.profileName() || '').trim();
+    if (!n) return '?';
+    const parts = n.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  onAvatarFileChange(event: Event) {
+    this.imageChangedEvent = event;
+    this.cropping.set(true);
+  }
+  onImageCropped(e: any) {
+    this.croppedImageBase64 = e.base64 || null;
+  }
+  onImageLoaded() {}
+  onCropperReady() {}
+  onLoadImageFailed() { this.cropping.set(false); }
+  async saveProfileDialog() {
+    const name = (this.profileName() || '').trim();
+    if (!name) {
+      alert('Name cannot be empty');
+      return;
+    }
+    await this.supabase.updateProfileName(name);
+    if (this.croppedImageBase64) {
+      const file = this.base64ToFile(this.croppedImageBase64, 'avatar.png');
+      const res = await this.supabase.uploadAvatar(file, true);
+      this.profileAvatarUrl.set(res.url);
+      this.croppedImageBase64 = null;
+      this.cropping.set(false);
+      this.imageChangedEvent = null;
+    }
+    this.showProfileDialog.set(false);
+  }
+  base64ToFile(base64: string, filename: string): File {
+    const arr = base64.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new File([u8arr], filename, { type: mime });
+  }
+  async loadChangelog() {
+    try {
+      const text = await this.http.get('assets/CHANGELOG.md', { responseType: 'text' }).toPromise();
+      this.changelog.set(text || '');
+    } catch {
+      this.changelog.set('No release notes available.');
+    }
+  }
+  onProfileNameInput(event: Event) {
+    const t = event.target as HTMLInputElement | null;
+    this.profileName.set((t?.value || '').trimStart());
   }
 
   // --- Attachments & Emojis ---
@@ -291,6 +377,7 @@ export class Dashboard implements OnDestroy {
 
   async initialize() {
     await this.supabase.upsertProfileFromAuth();
+    await this.loadMyProfile();
     await this.loadFriends();
     const first = this.friends()[0];
     if (first) {
@@ -300,6 +387,14 @@ export class Dashboard implements OnDestroy {
     await this.setupPresence();
     // Kick off periodic refresh of signed URLs
     this.startSignedUrlRefresh();
+  }
+
+  private async loadMyProfile() {
+    const me = await this.supabase.getMyProfile();
+    if (me) {
+      this.profileName.set((me.name || '').trim());
+      this.profileAvatarUrl.set(me.avatar_url);
+    }
   }
 
   async loadFriends() {
