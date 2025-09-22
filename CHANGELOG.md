@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [2.2.0] - 2025-09-23
+
+### Added
+- User avatar enhancements:
+  - Added online/offline status indicator dot
+  - Implemented deterministic background color palette based on user ID or name hash
+  - Added support for consistent colors across the application for the same user
+  - Improved performance with OnPush change detection
+
 ## [2.1.0] - 2025-09-23
 
 ### Added
