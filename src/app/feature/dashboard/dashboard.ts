@@ -1,4 +1,4 @@
-import { Component, OnDestroy, WritableSignal } from '@angular/core';
+import { Component, OnDestroy, WritableSignal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, Validators, NonNullableFormBuilder, FormGroup } from '@angular/forms';
 import { signal } from '@angular/core';
@@ -11,6 +11,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { UserAvatarComponent } from '../../shared/user-avatar/user-avatar';
 import { ProfileDialogComponent } from '../../shared/profile-dialog/profile-dialog';
 import { LogoComponent } from '../../shared/logo/logo';
+import { KebabMenuComponent } from '../../shared/kebab-menu/kebab-menu';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,7 +24,8 @@ import { LogoComponent } from '../../shared/logo/logo';
     HttpClientModule, 
     UserAvatarComponent,
     ProfileDialogComponent,
-    LogoComponent
+    LogoComponent,
+    KebabMenuComponent
   ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
@@ -80,6 +82,22 @@ export class Dashboard implements OnDestroy {
   profileName = signal<string>('');
   profileAvatarUrl = signal<string | null>(null);
   changelog = signal<string>('');
+
+  // Chat management state
+  chatActionsLoading = signal<Set<string>>(new Set());
+
+  // Computed properties for chat organization
+  archivedChats = computed(() => {
+    const archivedIds = this.archivedChatIds();
+    return this.friends().filter(f => archivedIds.includes(f.id));
+  });
+
+  activeChats = computed(() => {
+    const archivedIds = this.archivedChatIds();
+    return this.friends().filter(f => !archivedIds.includes(f.id));
+  });
+
+  archivedChatIds = signal<string[]>([]);
 
   // File restrictions (mirror Supabase bucket policies/settings)
   readonly MAX_UPLOAD_BYTES = 1 * 1024 * 1024; // 1 MB
@@ -408,6 +426,15 @@ export class Dashboard implements OnDestroy {
   async loadFriends() {
     const list = await this.supabase.listFriendsSmartWithMeta();
     this.friends.set(list);
+
+    // Load archived chat IDs
+    try {
+      const archivedIds = await this.supabase.getArchivedChats();
+      this.archivedChatIds.set(archivedIds);
+    } catch (error) {
+      console.error('Error loading archived chats:', error);
+      this.archivedChatIds.set([]);
+    }
   }
 
   async selectFriend(id: string) {
@@ -601,5 +628,131 @@ export class Dashboard implements OnDestroy {
     if (this._unsubscribe) this._unsubscribe();
     if (this._unsubPresence) this._unsubPresence();
     if (this._refreshHandle) clearInterval(this._refreshHandle);
+  }
+
+  // ---------- Chat Management Methods ----------
+
+  async isChatArchived(friendId: string): Promise<boolean> {
+    return await this.supabase.isChatArchived(friendId);
+  }
+
+  async isUserBlocked(friendId: string): Promise<boolean> {
+    return await this.supabase.isUserBlocked(friendId);
+  }
+
+  isLoadingChatAction(friendId: string): boolean {
+    return this.chatActionsLoading().has(friendId);
+  }
+
+  async onChatArchive(friendId: string) {
+    this.chatActionsLoading.update(set => new Set([...set, friendId]));
+    try {
+      const isArchived = await this.isChatArchived(friendId);
+      if (isArchived) {
+        await this.supabase.unarchiveChat(friendId);
+        this.archivedChatIds.update(ids => ids.filter(id => id !== friendId));
+      } else {
+        await this.supabase.archiveChat(friendId);
+        this.archivedChatIds.update(ids => [...ids, friendId]);
+      }
+      // Refresh friends list to reflect changes
+      await this.loadFriends();
+    } catch (error) {
+      console.error('Error toggling chat archive:', error);
+      alert('Failed to update chat archive status. Please try again.');
+    } finally {
+      this.chatActionsLoading.update(set => {
+        const newSet = new Set(set);
+        newSet.delete(friendId);
+        return newSet;
+      });
+    }
+  }
+
+  async onChatBlock(friendId: string) {
+    this.chatActionsLoading.update(set => new Set([...set, friendId]));
+    try {
+      const isBlocked = await this.isUserBlocked(friendId);
+      if (isBlocked) {
+        await this.supabase.unblockUser(friendId);
+      } else {
+        await this.supabase.blockUser(friendId);
+      }
+      // Refresh friends list to reflect changes
+      await this.loadFriends();
+    } catch (error) {
+      console.error('Error toggling user block:', error);
+      alert('Failed to update block status. Please try again.');
+    } finally {
+      this.chatActionsLoading.update(set => {
+        const newSet = new Set(set);
+        newSet.delete(friendId);
+        return newSet;
+      });
+    }
+  }
+
+  async onChatRemoveForMe(friendId: string) {
+    if (!confirm('Are you sure you want to remove this chat from your list? This will not affect the other user.')) {
+      return;
+    }
+
+    this.chatActionsLoading.update(set => new Set([...set, friendId]));
+    try {
+      await this.supabase.removeChatForSelf(friendId);
+      // Refresh friends list to reflect changes
+      await this.loadFriends();
+      // If this was the selected friend, select the first available friend
+      if (this.selectedFriendId() === friendId) {
+        const firstFriend = this.friends()[0];
+        if (firstFriend) {
+          await this.selectFriend(firstFriend.id);
+        } else {
+          this.selectedFriendId.set(null);
+          this.messages.set([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error removing chat for self:', error);
+      alert('Failed to remove chat. Please try again.');
+    } finally {
+      this.chatActionsLoading.update(set => {
+        const newSet = new Set(set);
+        newSet.delete(friendId);
+        return newSet;
+      });
+    }
+  }
+
+  async onChatRemoveForBoth(friendId: string) {
+    if (!confirm('Are you sure you want to permanently delete this chat for both users? This action cannot be undone.')) {
+      return;
+    }
+
+    this.chatActionsLoading.update(set => new Set([...set, friendId]));
+    try {
+      await this.supabase.removeChatForBoth(friendId);
+      // Refresh friends list to reflect changes
+      await this.loadFriends();
+      // If this was the selected friend, select the first available friend
+      if (this.selectedFriendId() === friendId) {
+        const firstFriend = this.friends()[0];
+        if (firstFriend) {
+          await this.selectFriend(firstFriend.id);
+        } else {
+          this.selectedFriendId.set(null);
+          this.messages.set([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error removing chat for both users:', error);
+      alert('Failed to remove chat. Please try again.');
+    } finally {
+      this.chatActionsLoading.update(set => {
+        const newSet = new Set(set);
+        newSet.delete(friendId);
+        return newSet;
+      });
+    }
   }
 }

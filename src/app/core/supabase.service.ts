@@ -471,5 +471,268 @@ export class SupabaseService {
     if (error) throw error;
     return data; // null if not found
   }
-}
 
+  // ---------- Chat Management Methods ----------
+
+  // Archive a chat for the current user
+  async archiveChat(otherUserId: string) {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+
+    // Check if already archived
+    const { data: existing } = await this.supabase
+      .from('archived_chats')
+      .select('id')
+      .eq('user_id', myId)
+      .eq('other_user_id', otherUserId)
+      .maybeSingle();
+
+    if (existing) {
+      throw new Error('Chat is already archived');
+    }
+
+    const { error } = await this.supabase
+      .from('archived_chats')
+      .insert({ user_id: myId, other_user_id: otherUserId });
+
+    if (error) throw error;
+
+    // Log the action
+    await this.logAuditAction('archive', otherUserId);
+  }
+
+  // Unarchive a chat for the current user
+  async unarchiveChat(otherUserId: string) {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+
+    const { error } = await this.supabase
+      .from('archived_chats')
+      .delete()
+      .eq('user_id', myId)
+      .eq('other_user_id', otherUserId);
+
+    if (error) throw error;
+
+    // Log the action
+    await this.logAuditAction('unarchive', otherUserId);
+  }
+
+  // Check if a chat is archived for the current user
+  async isChatArchived(otherUserId: string): Promise<boolean> {
+    const myId = await this.getUserId();
+    if (!myId) return false;
+
+    const { data, error } = await this.supabase
+      .from('archived_chats')
+      .select('id')
+      .eq('user_id', myId)
+      .eq('other_user_id', otherUserId)
+      .maybeSingle();
+
+    if (error) return false;
+    return !!data;
+  }
+
+  // Get all archived chats for the current user
+  async getArchivedChats(): Promise<string[]> {
+    const myId = await this.getUserId();
+    if (!myId) return [];
+
+    const { data, error } = await this.supabase
+      .from('archived_chats')
+      .select('other_user_id')
+      .eq('user_id', myId);
+
+    if (error) throw error;
+    return (data || []).map((row: any) => row.other_user_id);
+  }
+
+  // Block a user
+  async blockUser(otherUserId: string) {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+
+    // Check if already blocked
+    const { data: existing } = await this.supabase
+      .from('blocked_users')
+      .select('id')
+      .eq('blocker_id', myId)
+      .eq('blocked_id', otherUserId)
+      .maybeSingle();
+
+    if (existing) {
+      throw new Error('User is already blocked');
+    }
+
+    const { error } = await this.supabase
+      .from('blocked_users')
+      .insert({ blocker_id: myId, blocked_id: otherUserId });
+
+    if (error) throw error;
+
+    // Log the action
+    await this.logAuditAction('block', otherUserId);
+  }
+
+  // Unblock a user
+  async unblockUser(otherUserId: string) {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+
+    const { error } = await this.supabase
+      .from('blocked_users')
+      .delete()
+      .eq('blocker_id', myId)
+      .eq('blocked_id', otherUserId);
+
+    if (error) throw error;
+
+    // Log the action
+    await this.logAuditAction('unblock', otherUserId);
+  }
+
+  // Check if a user is blocked by the current user
+  async isUserBlocked(otherUserId: string): Promise<boolean> {
+    const myId = await this.getUserId();
+    if (!myId) return false;
+
+    const { data, error } = await this.supabase
+      .from('blocked_users')
+      .select('id')
+      .eq('blocker_id', myId)
+      .eq('blocked_id', otherUserId)
+      .maybeSingle();
+
+    if (error) return false;
+    return !!data;
+  }
+
+  // Check if the current user is blocked by another user
+  async isBlockedByUser(otherUserId: string): Promise<boolean> {
+    const myId = await this.getUserId();
+    if (!myId) return false;
+
+    const { data, error } = await this.supabase
+      .from('blocked_users')
+      .select('id')
+      .eq('blocker_id', otherUserId)
+      .eq('blocked_id', myId)
+      .maybeSingle();
+
+    if (error) return false;
+    return !!data;
+  }
+
+  // Get all blocked users for the current user
+  async getBlockedUsers(): Promise<string[]> {
+    const myId = await this.getUserId();
+    if (!myId) return [];
+
+    const { data, error } = await this.supabase
+      .from('blocked_users')
+      .select('blocked_id')
+      .eq('blocker_id', myId);
+
+    if (error) throw error;
+    return (data || []).map((row: any) => row.blocked_id);
+  }
+
+  // Remove chat for current user only (soft delete - hide from their list)
+  async removeChatForSelf(otherUserId: string) {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+
+    // Log the action
+    await this.logAuditAction('remove_for_self', otherUserId);
+
+    // For now, we'll just remove the contact entry if it exists
+    // In the future, we might want to add a "hidden_chats" table
+    const { error } = await this.supabase
+      .from('contacts')
+      .delete()
+      .eq('user_id', myId)
+      .eq('contact_id', otherUserId);
+
+    // If no error or error is just "not found", we consider it successful
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+  }
+
+  // Remove chat for both users (hard delete - permanently delete messages)
+  async removeChatForBoth(otherUserId: string) {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+
+    // Delete all messages between the two users
+    const { error: deleteError } = await this.supabase
+      .from('messages')
+      .delete()
+      .or(`and(sender_id.eq.${myId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${myId})`);
+
+    if (deleteError) throw deleteError;
+
+    // Remove contact entries for both users
+    const { error: contactError1 } = await this.supabase
+      .from('contacts')
+      .delete()
+      .eq('user_id', myId)
+      .eq('contact_id', otherUserId);
+
+    const { error: contactError2 } = await this.supabase
+      .from('contacts')
+      .delete()
+      .eq('user_id', otherUserId)
+      .eq('contact_id', myId);
+
+    // Log the action
+    await this.logAuditAction('remove_for_both', otherUserId);
+
+    // Ignore "not found" errors for contacts
+    if (contactError1 && contactError1.code !== 'PGRST116') {
+      throw contactError1;
+    }
+    if (contactError2 && contactError2.code !== 'PGRST116') {
+      throw contactError2;
+    }
+  }
+
+  // Log audit actions for chat management
+  private async logAuditAction(action: 'archive' | 'unarchive' | 'block' | 'unblock' | 'remove_for_self' | 'remove_for_both', targetUserId: string, metadata?: any) {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+
+    const { error } = await this.supabase
+      .from('chat_audit_log')
+      .insert({
+        user_id: myId,
+        action,
+        target_user_id: targetUserId,
+        metadata: metadata || null
+      });
+
+    if (error) throw error;
+  }
+
+  // Get audit log for current user
+  async getAuditLog(limit: number = 50): Promise<any[]> {
+    const myId = await this.getUserId();
+    if (!myId) return [];
+
+    const { data, error } = await this.supabase
+      .from('chat_audit_log')
+      .select('*')
+      .eq('user_id', myId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  // Check if a message should be blocked (either user blocked the other)
+  async shouldBlockMessage(otherUserId: string): Promise<boolean> {
+    return await this.isUserBlocked(otherUserId) || await this.isBlockedByUser(otherUserId);
+  }
+}

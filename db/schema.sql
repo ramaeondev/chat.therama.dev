@@ -89,6 +89,86 @@ create policy "Users can delete their contacts"
   to authenticated
   using (user_id = auth.uid());
 
+-- Archived chats table: tracks which user archived which conversation
+create table if not exists public.archived_chats (
+  id bigint generated always as identity primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  other_user_id uuid references public.profiles(id) on delete cascade not null,
+  archived_at timestamp with time zone default now(),
+  unique(user_id, other_user_id)
+);
+
+alter table public.archived_chats enable row level security;
+
+-- Policies for archived chats
+drop policy if exists "Users can view their archived chats" on public.archived_chats;
+create policy "Users can view their archived chats"
+  on public.archived_chats for select
+  to authenticated
+  using (user_id = auth.uid());
+
+drop policy if exists "Users can manage their archived chats" on public.archived_chats;
+create policy "Users can manage their archived chats"
+  on public.archived_chats for all
+  to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+-- Blocked users table: tracks which users have blocked which other users
+create table if not exists public.blocked_users (
+  id bigint generated always as identity primary key,
+  blocker_id uuid references public.profiles(id) on delete cascade not null,
+  blocked_id uuid references public.profiles(id) on delete cascade not null,
+  blocked_at timestamp with time zone default now(),
+  unique(blocker_id, blocked_id)
+);
+
+alter table public.blocked_users enable row level security;
+
+-- Policies for blocked users
+drop policy if exists "Users can view who they have blocked" on public.blocked_users;
+create policy "Users can view who they have blocked"
+  on public.blocked_users for select
+  to authenticated
+  using (blocker_id = auth.uid());
+
+drop policy if exists "Users can manage their blocks" on public.blocked_users;
+create policy "Users can manage their blocks"
+  on public.blocked_users for all
+  to authenticated
+  using (blocker_id = auth.uid())
+  with check (blocker_id = auth.uid());
+
+-- Audit log table: tracks chat management actions
+create table if not exists public.chat_audit_log (
+  id bigint generated always as identity primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  action text not null check (action in ('archive', 'unarchive', 'block', 'unblock', 'remove_for_self', 'remove_for_both')),
+  target_user_id uuid references public.profiles(id) on delete set null,
+  metadata jsonb,
+  created_at timestamp with time zone default now()
+);
+
+alter table public.chat_audit_log enable row level security;
+
+-- Policies for audit log
+drop policy if exists "Users can view their own audit log" on public.chat_audit_log;
+create policy "Users can view their own audit log"
+  on public.chat_audit_log for select
+  to authenticated
+  using (user_id = auth.uid());
+
+drop policy if exists "Users can insert their own audit entries" on public.chat_audit_log;
+create policy "Users can insert their own audit entries"
+  on public.chat_audit_log for insert
+  to authenticated
+  with check (user_id = auth.uid());
+
+-- Add new tables to the realtime publication
+alter publication supabase_realtime add table public.archived_chats;
+alter publication supabase_realtime add table public.blocked_users;
+alter publication supabase_realtime add table public.chat_audit_log;
+
   -- Ensure RLS is enabled on storage.objects (usually enabled by default)
   -- alter table storage.objects enable row level security;
 

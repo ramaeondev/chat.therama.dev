@@ -51,8 +51,54 @@
         </button>
         <div class="text-xs text-red-600" *ngIf="searchError()">{{ searchError() }}</div>
       </div>
+
+      <!-- Archived Chats Section -->
+      <div *ngIf="archivedChats().length > 0" class="p-3 border-b">
+        <div class="font-medium text-gray-700 text-sm mb-2">Archived Chats</div>
+        <ul>
+          <li *ngFor="let f of archivedChats()" (click)="selectFriend(f.id)"
+              class="px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center justify-between gap-3 opacity-60"
+              [class.bg-blue-50]="selectedFriendId() === f.id">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="28"></app-user-avatar>
+              <div class="min-w-0">
+                <div class="truncate text-sm">{{ f.name || f.email }}</div>
+                <div class="text-[11px] text-gray-500 truncate">
+                  <ng-container *ngIf="f.last_message_text; else noMsg">
+                    <span class="opacity-70" *ngIf="f.last_message_from_me">You: </span>{{ f.last_message_text }}
+                  </ng-container>
+                  <ng-template #noMsg>
+                    {{ f.email }}
+                  </ng-template>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="text-[10px] text-gray-400" *ngIf="f.last_message_at as t">{{ t | date:'shortTime' }}</div>
+              <span class="w-2 h-2 rounded-full"
+                    [class.bg-green-500]="onlineIds().includes(f.id)"
+                    [class.bg-gray-300]="!onlineIds().includes(f.id)"></span>
+              <!-- Kebab menu for archived chat management -->
+              <app-kebab-menu
+                [friendId]="f.id"
+                [friendName]="f.name || f.email || 'Friend'"
+                [isArchived]="true"
+                [isBlocked]="false"
+                [loading]="isLoadingChatAction(f.id)"
+                (archive)="onChatArchive(f.id)"
+                (block)="onChatBlock(f.id)"
+                (removeForMe)="onChatRemoveForMe(f.id)"
+                (removeForBoth)="onChatRemoveForBoth(f.id)"
+              ></app-kebab-menu>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Regular Friends Section -->
+      <div class="p-3 border-b font-medium text-gray-700 text-sm">Active Chats</div>
       <ul>
-        <li *ngFor="let f of friends()" (click)="selectFriend(f.id)"
+        <li *ngFor="let f of activeChats()" (click)="selectFriend(f.id)"
             class="px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center justify-between gap-3"
             [class.bg-blue-50]="selectedFriendId() === f.id">
           <div class="flex items-center gap-2 min-w-0 flex-1">
@@ -74,6 +120,18 @@
             <span class="w-2 h-2 rounded-full"
                   [class.bg-green-500]="onlineIds().includes(f.id)"
                   [class.bg-gray-300]="!onlineIds().includes(f.id)"></span>
+            <!-- Kebab menu for chat management -->
+            <app-kebab-menu
+              [friendId]="f.id"
+              [friendName]="f.name || f.email || 'Friend'"
+              [isArchived]="false"
+              [isBlocked]="false"
+              [loading]="isLoadingChatAction(f.id)"
+              (archive)="onChatArchive(f.id)"
+              (block)="onChatBlock(f.id)"
+              (removeForMe)="onChatRemoveForMe(f.id)"
+              (removeForBoth)="onChatRemoveForBoth(f.id)"
+            ></app-kebab-menu>
           </div>
         </li>
       </ul>

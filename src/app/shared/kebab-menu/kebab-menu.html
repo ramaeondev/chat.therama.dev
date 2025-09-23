@@ -1,0 +1,79 @@
+<div class="relative inline-block" data-kebab-menu>
+  <!-- Kebab menu button -->
+  <button
+    type="button"
+    (click)="toggleMenu()"
+    class="p-1 rounded-full hover:bg-gray-100 transition-colors"
+    [attr.aria-label]="'Chat options for ' + friendName"
+    [attr.aria-expanded]="showMenu()"
+  >
+    <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown menu -->
+  <div
+    *ngIf="showMenu()"
+    class="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10"
+    [class.bottom-full]="position === 'top'"
+    [class.top-full]="position === 'bottom'"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="py-1">
+      <!-- Archive Chat -->
+      <button
+        type="button"
+        (click)="onArchive()"
+        class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+        [disabled]="loading"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 01-2-2V4a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+        </svg>
+        <span *ngIf="!isArchived">Archive Chat</span>
+        <span *ngIf="isArchived">Unarchive Chat</span>
+      </button>
+
+      <!-- Block User -->
+      <button
+        type="button"
+        (click)="onBlock()"
+        class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+        [disabled]="loading"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+        </svg>
+        <span *ngIf="!isBlocked">Block User</span>
+        <span *ngIf="isBlocked">Unblock User</span>
+      </button>
+
+      <!-- Remove Chat (For Me) -->
+      <button
+        type="button"
+        (click)="onRemoveForMe()"
+        class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+        [disabled]="loading"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Remove Chat (For Me)
+      </button>
+
+      <!-- Remove Chat (For Both Users) -->
+      <button
+        type="button"
+        (click)="onRemoveForBoth()"
+        class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+        [disabled]="loading"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        Remove Chat (For Both)
+      </button>
+    </div>
+  </div>
+</div>

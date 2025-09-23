@@ -240,3 +240,19 @@ As a **user**, I want to permanently delete my account and all associated record
 - [ ] Auto logout user after deletion completes.
 - [ ] Add email/notification confirmation once deletion is complete.
 - [ ] Write unit/integration tests for delete account flow.
+
+## End-to-end chat encryption
+- Implement client-side encryption for messages before sending to Supabase
+- Use Web Crypto API for encryption/decryption
+- Generate and manage encryption keys per conversation
+- Ensure messages are encrypted in transit and at rest
+- Add UI indicators for encrypted conversations
+- Code refs:
+  - `src/app/core/crypto.service.ts`: encryption/decryption utilities
+  - `src/app/feature/dashboard/dashboard.ts`: key management and message encryption
+  - `src/app/core/supabase.service.ts`: encrypted message handling
+
+Command to create issue:
+```
+gh issue create --title "End-to-end chat encryption" --body "Implement client-side encryption for all messages using Web Crypto API. Generate keys per conversation, encrypt messages before sending to Supabase. Code: crypto.service.ts (encryption utils), dashboard.ts (key management), supabase.service.ts (encrypted message handling). Acceptance: messages encrypted in transit and at rest, UI shows encryption status."
+```
