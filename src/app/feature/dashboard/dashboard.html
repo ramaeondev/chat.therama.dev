@@ -2,11 +2,7 @@
   <!-- Topbar -->
   <header class="flex items-center justify-between px-4 py-3 bg-white shadow relative z-10">
     <div class="flex items-center gap-3">
-      <img src="/assets/quick-chat.png" alt="QuickChat" class="w-12 h-12 md:w-14 md:h-14 drop-shadow-sm" />
-      <div class="hidden sm:block">
-        <div class="text-lg font-semibold leading-5">QuickChat</div>
-        <div class="text-[11px] text-gray-500 -mt-0.5">chat.therama.dev</div>
-      </div>
+      <app-logo></app-logo>
       <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-50 text-gray-700 border ml-2"
             [class.bg-green-100]="realtimeConnected()" [class.text-green-700]="realtimeConnected()"
             [class.bg-gray-100]="!realtimeConnected()" [class.text-gray-600]="!realtimeConnected()">
@@ -16,14 +12,7 @@
     <div class="flex items-center gap-3 text-sm relative">
       <!-- Avatar button -->
       <button type="button" (click)="toggleMenu()" class="flex items-center gap-2">
-        <ng-container *ngIf="profileAvatarUrl(); else initials">
-          <img [src]="profileAvatarUrl()" class="w-9 h-9 rounded-full object-cover ring-1 ring-gray-200" alt="avatar" />
-        </ng-container>
-        <ng-template #initials>
-          <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold ring-1 ring-blue-300">
-            {{ avatarInitials() }}
-          </div>
-        </ng-template>
+        <app-user-avatar [src]="profileAvatarUrl()" [name]="profileName()" [userId]="user()?.['id'] || ''" [size]="36" alt="me"></app-user-avatar>
       </button>
 
       <!-- Dropdown menu -->
@@ -67,7 +56,7 @@
             class="px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center justify-between gap-3"
             [class.bg-blue-50]="selectedFriendId() === f.id">
           <div class="flex items-center gap-2 min-w-0 flex-1">
-            <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email" [size]="28"></app-user-avatar>
+            <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="28"></app-user-avatar>
             <div class="min-w-0">
               <div class="truncate text-sm">{{ f.name || f.email }}</div>
               <div class="text-[11px] text-gray-500 truncate">
@@ -95,7 +84,7 @@
       <!-- Chat header -->
       <div class="px-4 py-3 bg-white border-b flex items-center gap-3">
         <ng-container *ngIf="getFriend(selectedFriendId()) as f">
-          <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email" [size]="32"></app-user-avatar>
+          <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="32"></app-user-avatar>
         </ng-container>
         <div class="flex items-center gap-2">
           <h2 class="font-medium text-gray-800">{{ friendName(selectedFriendId()) }}</h2>
@@ -178,53 +167,14 @@
   <app-footer></app-footer>
 
   <!-- Profile Dialog -->
-  <div *ngIf="showProfileDialog()" class="fixed inset-0 bg-black/40 flex items-center justify-center z-20">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold">My profile</h3>
-        <button class="text-gray-500" (click)="closeDialogs()">✕</button>
-      </div>
-      <div class="flex flex-col items-center gap-4">
-        <!-- Cropper mode -->
-        <div *ngIf="cropping(); else avatarPreview" class="w-full">
-          <image-cropper
-            [imageChangedEvent]="imageChangedEvent"
-            [maintainAspectRatio]="true"
-            [aspectRatio]="1/1"
-            [roundCropper]="true"
-            format="png"
-            (imageCropped)="onImageCropped($event)"
-            (imageLoaded)="onImageLoaded()"
-            (cropperReady)="onCropperReady()"
-            (loadImageFailed)="onLoadImageFailed()"
-          ></image-cropper>
-          <div class="text-xs text-gray-500 mt-1">Drag to adjust the crop, then click Save.</div>
-        </div>
-        <ng-template #avatarPreview>
-          <ng-container *ngIf="profileAvatarUrl(); else initPreview">
-            <img [src]="profileAvatarUrl()" class="w-24 h-24 rounded-full object-cover ring-2 ring-blue-200" alt="avatar" />
-          </ng-container>
-          <ng-template #initPreview>
-            <div class="w-24 h-24 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold ring-2 ring-blue-300">
-              {{ avatarInitials() }}
-            </div>
-          </ng-template>
-          <label class="px-3 py-1.5 border rounded cursor-pointer text-sm mt-2 inline-block">Change photo
-            <input type="file" class="hidden" accept="image/*" (change)="onAvatarFileChange($event)" />
-          </label>
-        </ng-template>
-        <div class="w-full">
-          <label class="block text-sm text-gray-600 mb-1">Name</label>
-          <input type="text" class="w-full border rounded px-3 py-2" [value]="profileName()" (input)="onProfileNameInput($event)" placeholder="Your name" />
-          <div class="text-xs text-gray-500 mt-1">Name is required and cannot be empty.</div>
-        </div>
-      </div>
-      <div class="mt-5 flex justify-end gap-2">
-        <button class="px-3 py-1.5 border rounded" (click)="closeDialogs()">Cancel</button>
-        <button class="px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700" (click)="saveProfileDialog()">Save</button>
-      </div>
-    </div>
-  </div>
+  <app-profile-dialog 
+    *ngIf="showProfileDialog()"
+    [profileName]="profileName()"
+    [profileAvatarUrl]="profileAvatarUrl()"
+    (close)="closeDialogs()"
+    (save)="saveProfile($event)"
+    (removeAvatar)="removeProfilePicture()"
+  ></app-profile-dialog>
 
   <!-- What’s New Dialog -->
   <div *ngIf="showWhatsNewDialog()" class="fixed inset-0 bg-black/40 flex items-center justify-center z-20">

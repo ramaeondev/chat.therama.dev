@@ -1,14 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal, WritableSignal, OnDestroy } from '@angular/core';
-import { FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SupabaseService } from '../core/supabase.service';
 import { Router } from '@angular/router';
 import { FooterComponent } from '../shared/footer/footer';
+import { LogoComponent } from '../shared/logo/logo';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FooterComponent],
+  imports: [CommonModule, ReactiveFormsModule, FooterComponent, LogoComponent],
   templateUrl: './signup.html',
   styleUrls: ['./signup.scss']
 })

@@ -188,4 +188,4 @@ Made with ❤️ from therama.dev
 
 ## Release Notes
 
-See `CHANGELOG.md` for detailed release notes. Latest: `2.0.0` adds attachments, private storage with signed URLs, and a full emoji picker.
+See `CHANGELOG.md` for detailed release notes. Latest: `2.3.0` adds a reusable logo component, fixes profile picture cropping, and improves state management.

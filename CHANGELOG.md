@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [2.3.0] - 2025-09-23
+
+### Added
+- New reusable LogoComponent for consistent branding across the application:
+  - Extracted QuickChat branding into a standalone component
+  - Configurable subtitle support
+  - Used in dashboard, login, and signup components
+
+### Fixed
+- Profile picture upload and cropping functionality:
+  - Fixed event handling for ngx-image-cropper v9 compatibility
+  - Improved error handling and debugging for crop operations
+  - Fixed state management when canceling cropping process
+  - Enhanced CSS styling for better cropper display
+
+### Changed
+- Improved state management in profile dialog:
+  - Proper cleanup of temporary cropping state
+  - Consistent error handling across all crop operations
+  - Better user feedback for upload and cropping processes
+
 ## [2.2.0] - 2025-09-23
 
 ### Added

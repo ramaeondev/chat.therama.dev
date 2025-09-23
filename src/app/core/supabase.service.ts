@@ -40,6 +40,44 @@ export class SupabaseService {
   }
 
   // Upload avatar and return a signed URL, and optionally update profile.avatar_url
+  async removeAvatar(): Promise<void> {
+    const myId = await this.getUserId();
+    if (!myId) throw new Error('Not authenticated');
+    
+    // Get current profile to find the avatar path
+    const { data: profile } = await this.supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', myId)
+      .single();
+    
+    if (profile?.avatar_url) {
+      // Extract the path from the URL
+      const url = new URL(profile.avatar_url);
+      const path = url.pathname.split('/').pop();
+      
+      if (path) {
+        // Delete the file from storage
+        const { error: deleteError } = await this.supabase.storage
+          .from('chat.therama.dev')
+          .remove([path]);
+          
+        if (deleteError) {
+          console.error('Error removing avatar file:', deleteError);
+          // Continue to update the profile even if file deletion fails
+        }
+      }
+      
+      // Update profile to remove avatar_url
+      const { error } = await this.supabase
+        .from('profiles')
+        .update({ avatar_url: null })
+        .eq('id', myId);
+        
+      if (error) throw error;
+    }
+  }
+
   async uploadAvatar(file: File, updateProfile = true): Promise<{ path: string; url: string }> {
     const myId = await this.getUserId();
     if (!myId) throw new Error('Not authenticated');

@@ -5,11 +5,12 @@ import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angula
 import { signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FooterComponent } from '../shared/footer/footer';
+import { LogoComponent } from '../shared/logo/logo';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, FooterComponent] ,
+  imports: [ReactiveFormsModule, CommonModule, FooterComponent, LogoComponent],
   templateUrl: './login.html',
   styleUrls: ['./login.scss']
 })
