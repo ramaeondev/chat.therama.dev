@@ -1,0 +1,255 @@
+/* Landing Page Styles */
+:host {
+  display: block;
+}
+
+/* Hero Section Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Hero section */
+section:first-of-type {
+  background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  position: relative;
+}
+
+section:first-of-type::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(120, 119, 198, 0.3), transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.15), transparent 50%);
+  pointer-events: none;
+}
+
+/* Hero content */
+section:first-of-type .text-5xl {
+  animation: fadeInUp 1s ease-out;
+}
+
+section:first-of-type .text-xl {
+  animation: fadeInUp 1s ease-out 0.2s both;
+}
+
+section:first-of-type .flex {
+  animation: fadeInUp 1s ease-out 0.4s both;
+}
+
+/* Button animations */
+.bg-gradient-to-r {
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-gradient-to-r::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.bg-gradient-to-r:hover::before {
+  left: 100%;
+}
+
+/* Feature cards */
+.bg-white {
+  transition: all 0.3s ease;
+  transform: translateY(0);
+}
+
+.bg-white:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+/* Icons */
+.w-12.h-12 {
+  transition: all 0.3s ease;
+}
+
+.bg-white:hover .w-12.h-12 {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Stats section */
+.bg-gradient-to-r {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  position: relative;
+}
+
+.bg-gradient-to-r::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="%23ffffff" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+}
+
+/* Footer animations */
+footer {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  section:first-of-type {
+    padding: 5rem 0;
+  }
+
+  .text-5xl {
+    font-size: 3rem !important;
+    line-height: 1.1;
+  }
+
+  .text-xl {
+    font-size: 1.125rem !important;
+  }
+
+  .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Loading animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #5a6fd8, #6a4190);
+}
+
+/* Focus states for accessibility */
+button:focus,
+a:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Guaranteed visibility - this will always work */
+.gradient-text-instantly {
+  color: #2563eb !important;
+  background: none !important;
+  -webkit-text-fill-color: #2563eb !important;
+  font-weight: 800 !important;
+  position: relative;
+  z-index: 10;
+}
+
+/* Enhanced gradient effect that works in modern browsers */
+@supports (background-clip: text) {
+  .gradient-text-instantly {
+    background: linear-gradient(135deg, #2563eb, #7c3aed, #ec4899, #f59e0b) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+  }
+}
+
+/* Fallback for browsers that don't support background-clip */
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .gradient-text-instantly {
+    color: #2563eb !important;
+    background: none !important;
+    -webkit-text-fill-color: #2563eb !important;
+    font-weight: 800 !important;
+  }
+}
+
+/* Clean and simple gradient text - no conflicts */
+.gradient-text-instantly {
+  color: #2563eb !important;
+  font-weight: 800 !important;
+  position: relative;
+  z-index: 10;
+  display: inline-block;
+}
+
+/* Apply gradient only to modern browsers */
+@supports (background-clip: text) {
+  .gradient-text-instantly {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 30%, #ec4899 70%, #f59e0b 100%);
+    background-size: 100% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: gradientShift 3s ease-in-out infinite alternate;
+    /* Ensure crisp text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* Ensure clean rendering */
+.gradient-text-instantly::after {
+  display: none; /* Remove pseudo-element approach that might cause blur */
+}
+
+/* Clean up parent interference */
+h1 {
+  position: static; /* Remove relative positioning */
+}

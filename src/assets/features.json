@@ -1,0 +1,371 @@
+{
+  "application": {
+    "name": "QuickChat",
+    "version": "2.3.1",
+    "description": "Modern real-time chat application built with Angular and Supabase",
+    "tagline": "Connect instantly, chat seamlessly",
+    "url": "https://chat.therama.dev"
+  },
+  "features": {
+    "implemented": {
+      "authentication": {
+        "title": "Secure Authentication",
+        "description": "OTP-based email authentication system",
+        "icon": "🔐",
+        "items": [
+          {
+            "name": "Email OTP Login",
+            "description": "Secure login with one-time password sent to email",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Email OTP Signup",
+            "description": "Easy account creation with email verification",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Automatic Profile Creation",
+            "description": "Profile automatically created from authentication data",
+            "status": "✅ Implemented"
+          }
+        ]
+      },
+      "messaging": {
+        "title": "Real-time Messaging",
+        "description": "Instant messaging with real-time updates",
+        "icon": "💬",
+        "items": [
+          {
+            "name": "Instant Message Delivery",
+            "description": "Messages appear instantly for all participants",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Message History",
+            "description": "Complete chat history with timestamps",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Smart Friends List",
+            "description": "Auto-sorted by recent activity, shows last message preview",
+            "status": "✅ Implemented"
+          }
+        ]
+      },
+      "presence": {
+        "title": "Live Presence",
+        "description": "See who's online and active",
+        "icon": "🟢",
+        "items": [
+          {
+            "name": "Online Status Indicators",
+            "description": "Real-time online/offline status for all users",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Activity Tracking",
+            "description": "Track user activity and connection status",
+            "status": "✅ Implemented"
+          }
+        ]
+      },
+      "profile": {
+        "title": "Profile Management",
+        "description": "Complete profile customization",
+        "icon": "👤",
+        "items": [
+          {
+            "name": "Custom Avatars",
+            "description": "Upload and crop profile pictures with circular preview",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Dynamic Initials",
+            "description": "Auto-generated initials from name with consistent colors",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Profile Information",
+            "description": "Name and avatar management with real-time updates",
+            "status": "✅ Implemented"
+          }
+        ]
+      },
+      "attachments": {
+        "title": "Rich Attachments",
+        "description": "Share files, images, and documents",
+        "icon": "📎",
+        "items": [
+          {
+            "name": "File Upload",
+            "description": "Support for images, videos, documents, and archives",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Image Previews",
+            "description": "Inline preview for uploaded images",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Client-side Validation",
+            "description": "1MB size limit and MIME type restrictions",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Secure Storage",
+            "description": "Private Supabase Storage with signed URLs",
+            "status": "✅ Implemented"
+          }
+        ]
+      },
+      "ui": {
+        "title": "Modern Interface",
+        "description": "Beautiful, responsive user interface",
+        "icon": "🎨",
+        "items": [
+          {
+            "name": "Responsive Design",
+            "description": "Optimized for desktop, tablet, and mobile devices",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Emoji Support",
+            "description": "Full emoji picker with extensive catalog",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Dark/Light Theme Ready",
+            "description": "Built with Tailwind CSS for easy theming",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Consistent Branding",
+            "description": "Reusable logo component across all pages",
+            "status": "✅ Implemented"
+          }
+        ]
+      },
+      "deployment": {
+        "title": "Production Ready",
+        "description": "Enterprise-grade deployment setup",
+        "icon": "🚀",
+        "items": [
+          {
+            "name": "Docker Containerization",
+            "description": "Fully containerized with multi-stage builds",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "HTTPS with SSL",
+            "description": "Secure connections with Cloudflare certificates",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "CI/CD Pipeline",
+            "description": "Automated deployment via GitHub Actions",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "AWS EC2 Hosting",
+            "description": "Scalable cloud infrastructure",
+            "status": "✅ Implemented"
+          }
+        ]
+      }
+    },
+    "recentlyAdded": {
+      "v2.3.1": {
+        "title": "Latest Release - Profile & Branding Enhancements",
+        "description": "Recent improvements and fixes",
+        "icon": "✨",
+        "items": [
+          {
+            "name": "Reusable Logo Component",
+            "description": "Consistent branding across dashboard, login, and signup pages",
+            "status": "✅ New"
+          },
+          {
+            "name": "Enhanced Profile Cropping",
+            "description": "Fixed image cropper compatibility and error handling",
+            "status": "✅ Fixed"
+          },
+          {
+            "name": "Improved State Management",
+            "description": "Better cleanup of temporary states and consistent error handling",
+            "status": "✅ Improved"
+          }
+        ]
+      },
+      "v2.2.0": {
+        "title": "User Avatar System",
+        "description": "Comprehensive avatar and status system",
+        "icon": "🖼️",
+        "items": [
+          {
+            "name": "Online Status Dots",
+            "description": "Visual indicators for user connection status",
+            "status": "✅ Added"
+          },
+          {
+            "name": "Deterministic Colors",
+            "description": "Consistent color palette based on user ID/name hash",
+            "status": "✅ Added"
+          },
+          {
+            "name": "Performance Optimization",
+            "description": "OnPush change detection for better performance",
+            "status": "✅ Added"
+          }
+        ]
+      },
+      "v2.1.0": {
+        "title": "Profile Management System",
+        "description": "Complete profile customization suite",
+        "icon": "⚙️",
+        "items": [
+          {
+            "name": "Image Cropper",
+            "description": "Circular avatar cropping with ngx-image-cropper",
+            "status": "✅ Added"
+          },
+          {
+            "name": "What's New Dialog",
+            "description": "Changelog viewer from markdown files",
+            "status": "✅ Added"
+          }
+        ]
+      },
+      "v2.0.0": {
+        "title": "Rich Media & Attachments",
+        "description": "Full multimedia support",
+        "icon": "📱",
+        "items": [
+          {
+            "name": "File Attachments",
+            "description": "Images, videos, documents, and archives support",
+            "status": "✅ Added"
+          },
+          {
+            "name": "Emoji Picker",
+            "description": "Full emoji catalog integration",
+            "status": "✅ Added"
+          },
+          {
+            "name": "Private Storage",
+            "description": "Secure Supabase Storage with signed URLs",
+            "status": "✅ Added"
+          }
+        ]
+      }
+    },
+    "planned": {
+      "next": {
+        "title": "Upcoming Features",
+        "description": "Features planned for next releases",
+        "icon": "🔄",
+        "items": [
+          {
+            "name": "Drag & Drop Upload",
+            "description": "Drag files directly into chat for instant upload",
+            "status": "🚧 Planned"
+          },
+          {
+            "name": "Upload Progress Bar",
+            "description": "Visual progress indicators for file uploads",
+            "status": "🚧 Planned"
+          },
+          {
+            "name": "Signed URL Refresh",
+            "description": "Automatic refresh of expired attachment URLs",
+            "status": "🚧 Planned"
+          },
+          {
+            "name": "Centralized Configuration",
+            "description": "Move upload limits and settings to config service",
+            "status": "🚧 Planned"
+          }
+        ]
+      },
+      "future": {
+        "title": "Future Enhancements",
+        "description": "Planned features for upcoming major releases",
+        "icon": "🔮",
+        "items": [
+          {
+            "name": "Chat Management",
+            "description": "Archive, block, and remove chat conversations",
+            "status": "📋 Backlog"
+          },
+          {
+            "name": "Account Deletion",
+            "description": "Complete account removal with data cleanup",
+            "status": "📋 Backlog"
+          },
+          {
+            "name": "Advanced Search",
+            "description": "Search through message history and users",
+            "status": "📋 Backlog"
+          },
+          {
+            "name": "Message Reactions",
+            "description": "React to messages with emojis",
+            "status": "📋 Backlog"
+          },
+          {
+            "name": "Voice Messages",
+            "description": "Record and send voice messages",
+            "status": "📋 Backlog"
+          },
+          {
+            "name": "Group Chats",
+            "description": "Multi-user chat rooms and channels",
+            "status": "📋 Backlog"
+          },
+          {
+            "name": "Push Notifications",
+            "description": "Browser and mobile push notifications",
+            "status": "📋 Backlog"
+          },
+          {
+            "name": "Message Encryption",
+            "description": "End-to-end encryption for private conversations",
+            "status": "📋 Backlog"
+          }
+        ]
+      }
+    }
+  },
+  "techStack": {
+    "frontend": [
+      "Angular 20",
+      "TypeScript",
+      "Tailwind CSS",
+      "RxJS"
+    ],
+    "backend": [
+      "Supabase (Auth, Database, Realtime, Storage)",
+      "PostgreSQL"
+    ],
+    "deployment": [
+      "Docker",
+      "Nginx",
+      "AWS EC2",
+      "ECR Public",
+      "GitHub Actions CI/CD"
+    ],
+    "security": [
+      "HTTPS with SSL certificates",
+      "Row Level Security (RLS)",
+      "Private Storage with signed URLs",
+      "OTP-based authentication"
+    ]
+  },
+  "stats": {
+    "currentVersion": "2.3.1",
+    "lastUpdated": "2025-09-23",
+    "totalFeatures": 25,
+    "implementedFeatures": 18,
+    "plannedFeatures": 7,
+    "backlogFeatures": 8
+  }
+}

@@ -15,6 +15,7 @@ QuickChat is a modern real-time chat application built with Angular and Supabase
 - Responsive UI (Tailwind CSS)
 - CI/CD via GitHub Actions → ECR Public → EC2 (docker compose)
 - HTTPS with Cloudflare Origin Certificates (Nginx)
+- **Landing Page** with dynamic feature showcase and professional design
  - Attachments (images, videos, docs, archives) with client-side validation and previews
  - Emoji picker (full catalogue) using `emoji-picker-element`
 
@@ -188,4 +189,4 @@ Made with ❤️ from therama.dev
 
 ## Release Notes
 
-See `CHANGELOG.md` for detailed release notes. Latest: `2.3.0` adds a reusable logo component, fixes profile picture cropping, and improves state management.
+See `CHANGELOG.md` for detailed release notes. Latest: `3.0.0` adds a complete landing page experience, enhanced features documentation, and improved gradient text rendering.

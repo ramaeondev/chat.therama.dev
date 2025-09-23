@@ -4,7 +4,76 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [3.0.0] - 2025-09-23
+
+### Added
+- **Complete Landing Page Experience**:
+  - Beautiful, responsive landing page at root URL (`/`)
+  - Dynamic feature showcase with JSON-driven content
+  - Professional hero section with animated gradient text
+  - Statistics display showing feature counts and progress
+  - Recent updates section with version information
+  - Technology stack showcase
+  - Call-to-action sections with smooth transitions
+
+- **Enhanced Features Documentation**:
+  - Comprehensive `features.json` with all current and planned features
+  - Dynamic loading of features data via HttpClient service
+  - Structured feature categories (Authentication, Messaging, Presence, etc.)
+  - Version history and roadmap information
+
+- **Improved User Experience**:
+  - Smooth loading states and error handling
+  - Professional footer component integration
+  - Consistent branding with LogoComponent
+  - Mobile-responsive design throughout
+  - Beautiful animations and hover effects
+
+### Fixed
+- **Gradient Text Rendering**:
+  - Fixed blurred gradient text with optimized CSS
+  - Multiple fallback strategies for cross-browser compatibility
+  - Clean, crisp text rendering with anti-aliasing
+  - Removed CSS conflicts causing visual artifacts
+
+- **HttpClient Provider Setup**:
+  - Added HttpClient provider to app configuration
+  - Fixed standalone component dependency injection
+  - Proper service architecture for data loading
+
+### Changed
+- **Application Architecture**:
+  - Moved to version 3.0.0 for major landing page release
+  - Enhanced component structure with better separation of concerns
+  - Improved CSS organization and reduced conflicts
+  - Better error handling and user feedback
+
+- **Styling Improvements**:
+  - Clean, professional design system
+  - Consistent color palette and typography
+  - Optimized animations and transitions
+  - Better accessibility and focus states
+
 ## [2.3.0] - 2025-09-23
+
+### Added
+- New reusable LogoComponent for consistent branding across the application:
+  - Extracted QuickChat branding into a standalone component
+  - Configurable subtitle support
+  - Used in dashboard, login, and signup components
+
+### Fixed
+- Profile picture upload and cropping functionality:
+  - Fixed event handling for ngx-image-cropper v9 compatibility
+  - Improved error handling and debugging for crop operations
+  - Fixed state management when canceling cropping process
+  - Enhanced CSS styling for better cropper display
+
+### Changed
+- Improved state management in profile dialog:
+  - Proper cleanup of temporary cropping state
+  - Consistent error handling across all crop operations
+  - Better user feedback for upload and cropping processes
 
 ### Added
 - New reusable LogoComponent for consistent branding across the application:

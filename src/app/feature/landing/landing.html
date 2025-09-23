@@ -1,0 +1,199 @@
+<!-- Loading State -->
+<div *ngIf="loading" class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+  <div class="text-center">
+    <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+    <p class="text-xl text-gray-600">Loading QuickChat features...</p>
+  </div>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error" class="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 flex items-center justify-center">
+  <div class="text-center max-w-md mx-auto p-8 bg-white rounded-2xl shadow-lg">
+    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <span class="text-2xl">⚠️</span>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">Oops!</h2>
+    <p class="text-gray-600 mb-6">{{ error }}</p>
+    <button (click)="ngOnInit()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+      Try Again
+    </button>
+  </div>
+</div>
+  <!-- Navigation -->
+  <nav class="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <div class="flex items-center space-x-3">
+          <app-logo></app-logo>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="/signin" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Sign In</a>
+          <a href="/signup" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            Get Started
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="relative py-20 lg:py-32 overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <h1 class="text-5xl lg:text-7xl font-bold text-gray-900 mb-6">
+          Connect
+          <span class="gradient-text-instantly" data-text="Instantly">Instantly</span>
+        </h1>
+        <p class="text-xl lg:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          Experience the future of real-time communication with QuickChat.
+          Secure, fast, and beautifully designed for modern teams.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/signup" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
+            Start Chatting Now
+          </a>
+          <a href="/signin" class="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl text-lg font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
+            Sign In
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="py-20 bg-white/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Why Choose QuickChat?</h2>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" *ngIf="!loading && !error">
+        <div *ngFor="let category of featureCategories" class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-100">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mb-6">
+            <span class="text-2xl">{{ category.icon }}</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-4">{{ category.title }}</h3>
+          <p class="text-gray-600 mb-6">{{ category.description }}</p>
+          <ul class="space-y-3">
+            <li *ngFor="let item of category.items.slice(0, 3)" class="flex items-start space-x-3">
+              <div class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+              <span class="text-gray-700">{{ item.name }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center" *ngIf="stats">
+        <div class="text-white">
+          <div class="text-4xl lg:text-5xl font-bold mb-2">{{ stats.totalFeatures }}</div>
+          <div class="text-blue-100">Features</div>
+        </div>
+        <div class="text-white">
+          <div class="text-4xl lg:text-5xl font-bold mb-2">{{ stats.implementedFeatures }}</div>
+          <div class="text-blue-100">Implemented</div>
+        </div>
+        <div class="text-white">
+          <div class="text-4xl lg:text-5xl font-bold mb-2">{{ stats.plannedFeatures }}</div>
+          <div class="text-blue-100">Planned</div>
+        </div>
+        <div class="text-white">
+          <div class="text-4xl lg:text-5xl font-bold mb-2">{{ stats.backlogFeatures }}</div>
+          <div class="text-blue-100">In Backlog</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Updates -->
+  <section class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16" *ngIf="app">
+        <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Latest Updates</h2>
+        <p class="text-xl text-gray-600">Version {{ app.version }} - {{ app.lastUpdated }}</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" *ngIf="recentUpdates.length > 0 && !loading && !error">
+        <div *ngFor="let update of recentUpdates" class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-100">
+          <div class="flex items-center mb-6">
+            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center mr-4">
+              <span class="text-xl">{{ update.icon }}</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900">{{ update.title }}</h3>
+              <p class="text-gray-600">{{ update.description }}</p>
+            </div>
+          </div>
+          <ul class="space-y-3">
+            <li *ngFor="let item of update.items" class="flex items-start space-x-3">
+              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+              <div>
+                <span class="font-medium text-gray-900">{{ item.name }}</span>
+                <span class="text-sm text-gray-500 ml-2">{{ item.status }}</span>
+                <p class="text-sm text-gray-600 mt-1">{{ item.description }}</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Built with Modern Technology</h2>
+        <p class="text-xl text-gray-600">Enterprise-grade stack for reliable, scalable messaging</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" *ngIf="techStack">
+        <div class="text-center">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">Frontend</h3>
+          <ul class="space-y-2 text-gray-600">
+            <li *ngFor="let tech of techStack.frontend">{{ tech }}</li>
+          </ul>
+        </div>
+        <div class="text-center">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">Backend</h3>
+          <ul class="space-y-2 text-gray-600">
+            <li *ngFor="let tech of techStack.backend">{{ tech }}</li>
+          </ul>
+        </div>
+        <div class="text-center">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">Deployment</h3>
+          <ul class="space-y-2 text-gray-600">
+            <li *ngFor="let tech of techStack.deployment">{{ tech }}</li>
+          </ul>
+        </div>
+        <div class="text-center">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">Security</h3>
+          <ul class="space-y-2 text-gray-600">
+            <li *ngFor="let tech of techStack.security">{{ tech }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
+    <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+      <h2 class="text-4xl lg:text-5xl font-bold text-white mb-6">Ready to Get Started?</h2>
+      <p class="text-xl text-blue-100 mb-8">
+        Join thousands of users already using QuickChat for their real-time communication needs.
+      </p>
+      <a href="/signup" class="bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-gray-50 transform hover:scale-105 transition-all duration-200 shadow-lg">
+        Create Your Account
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <app-footer></app-footer>
