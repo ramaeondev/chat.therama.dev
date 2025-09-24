@@ -51,8 +51,8 @@
     "HTTPS with Nginx + Cloudflare Origin certs",
     "CI/CD: GitHub Actions → ECR Public → EC2",
     "Footer branding with therama.dev"
-  ],  
-  "update_project_version": "https://api.therama.dev/functions/v1/update-project-version",  
+  ],
+  "update_project_version": "https://api.therama.dev/functions/v1/update-project-version",
   "log_deployment": "https://api.therama.dev/functions/v1/log-deployment",
   "scripts": {
     "ng": "ng",
@@ -104,6 +104,7 @@
     "@angular/compiler-cli": "^20.2.0",
     "@types/jasmine": "~5.1.0",
     "autoprefixer": "^10.4.17",
+    "canvas": "^3.2.0",
     "eslint": "^9.30.1",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-import": "^2.32.0",
