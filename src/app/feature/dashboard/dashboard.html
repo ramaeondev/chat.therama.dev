@@ -78,18 +78,6 @@
               <span class="w-2 h-2 rounded-full"
                     [class.bg-green-500]="onlineIds().includes(f.id)"
                     [class.bg-gray-300]="!onlineIds().includes(f.id)"></span>
-              <!-- Kebab menu for archived chat management -->
-              <app-kebab-menu
-                [friendId]="f.id"
-                [friendName]="f.name || f.email || 'Friend'"
-                [isArchived]="true"
-                [isBlocked]="false"
-                [loading]="isLoadingChatAction(f.id)"
-                (archive)="onChatArchive(f.id)"
-                (block)="onChatBlock(f.id)"
-                (removeForMe)="onChatRemoveForMe(f.id)"
-                (removeForBoth)="onChatRemoveForBoth(f.id)"
-              ></app-kebab-menu>
             </div>
           </li>
         </ul>
@@ -120,18 +108,6 @@
             <span class="w-2 h-2 rounded-full"
                   [class.bg-green-500]="onlineIds().includes(f.id)"
                   [class.bg-gray-300]="!onlineIds().includes(f.id)"></span>
-            <!-- Kebab menu for chat management -->
-            <app-kebab-menu
-              [friendId]="f.id"
-              [friendName]="f.name || f.email || 'Friend'"
-              [isArchived]="false"
-              [isBlocked]="false"
-              [loading]="isLoadingChatAction(f.id)"
-              (archive)="onChatArchive(f.id)"
-              (block)="onChatBlock(f.id)"
-              (removeForMe)="onChatRemoveForMe(f.id)"
-              (removeForBoth)="onChatRemoveForBoth(f.id)"
-            ></app-kebab-menu>
           </div>
         </li>
       </ul>
@@ -140,16 +116,31 @@
     <!-- Chat area -->
     <main class="flex-1 flex flex-col">
       <!-- Chat header -->
-      <div class="px-4 py-3 bg-white border-b flex items-center gap-3">
-        <ng-container *ngIf="getFriend(selectedFriendId()) as f">
-          <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="32"></app-user-avatar>
-        </ng-container>
-        <div class="flex items-center gap-2">
-          <h2 class="font-medium text-gray-800">{{ friendName(selectedFriendId()) }}</h2>
-          <span class="w-2 h-2 rounded-full"
-                [class.bg-green-500]="onlineIds().includes(selectedFriendId() || '')"
-                [class.bg-gray-300]="!onlineIds().includes(selectedFriendId() || '')"></span>
+      <div class="px-4 py-3 bg-white border-b flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <ng-container *ngIf="getFriend(selectedFriendId()) as f">
+            <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="32"></app-user-avatar>
+          </ng-container>
+          <div class="flex items-center gap-2">
+            <h2 class="font-medium text-gray-800">{{ friendName(selectedFriendId()) }}</h2>
+            <span class="w-2 h-2 rounded-full"
+                  [class.bg-green-500]="onlineIds().includes(selectedFriendId() || '')"
+                  [class.bg-gray-300]="!onlineIds().includes(selectedFriendId() || '')"></span>
+          </div>
         </div>
+        <ng-container *ngIf="selectedFriendId() as friendId">
+          <app-kebab-menu
+            [friendId]="friendId"
+            [friendName]="friendName(friendId) || 'Friend'"
+            [isArchived]="isChatArchived(friendId)"
+            [isBlocked]="isFriendBlocked(friendId)"
+            [loading]="isLoadingChatAction(friendId)"
+            (archive)="onChatArchive(friendId)"
+            (block)="onChatBlock(friendId)"
+            (removeForMe)="onChatRemoveForMe(friendId)"
+            (removeForBoth)="onChatRemoveForBoth(friendId)"
+          ></app-kebab-menu>
+        </ng-container>
       </div>
 
       <!-- Messages list -->

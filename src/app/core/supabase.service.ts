@@ -40,6 +40,7 @@ export class SupabaseService {
   }
 
   // Upload avatar and return a signed URL, and optionally update profile.avatar_url
+  // Profile Methods
   async removeAvatar(): Promise<void> {
     const myId = await this.getUserId();
     if (!myId) throw new Error('Not authenticated');
