@@ -113,13 +113,14 @@ export class SupabaseService {
 
   // Upload with progress using XMLHttpRequest directly to the Storage REST API.
   // Progress callback receives values from 0 to 100.
-  async uploadAttachmentWithProgress(file: File, onProgress: (pct: number) => void): Promise<{ path: string }> {
+  async uploadAttachmentWithProgress(file: File, friendId: string, onProgress: (pct: number) => void): Promise<{ path: string }> {
     const myId = await this.getUserId();
     if (!myId) throw new Error('Not authenticated');
+    if (!friendId) throw new Error('Friend ID is required');
     const bucket = 'chat.therama.dev';
     const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
     const rand = Math.random().toString(36).slice(2, 8);
-    const path = `${myId}/${Date.now()}_${rand}.${ext}`;
+    const path = `${myId}/${friendId}/${Date.now()}_${rand}.${ext}`;
 
     const { data: sessionData } = await this.supabase.auth.getSession();
     const accessToken = sessionData.session?.access_token;
@@ -396,13 +397,14 @@ export class SupabaseService {
   // Upload an attachment to a private Supabase Storage bucket and return its storage path.
   // Ensure a bucket named "attachments" exists in your Supabase project.
   // Access is private; clients should request signed URLs using getSignedUrl.
-  async uploadAttachment(file: File): Promise<{ path: string }> {
+  async uploadAttachment(file: File, friendId: string): Promise<{ path: string }> {
     const myId = await this.getUserId();
     if (!myId) throw new Error('Not authenticated');
+    if (!friendId) throw new Error('Friend ID is required');
     const bucket = 'chat.therama.dev';
     const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
     const rand = Math.random().toString(36).slice(2, 8);
-    const path = `${myId}/${Date.now()}_${rand}.${ext}`;
+    const path = `${myId}/${friendId}/${Date.now()}_${rand}.${ext}`;
     const { error: uploadError } = await this.supabase.storage
       .from(bucket)
       .upload(path, file, { contentType: file.type, upsert: false });
@@ -437,7 +439,7 @@ export class SupabaseService {
     return data.signedUrl;
   }
 
-  subscribeToMessages(friendId: string, onInsert: (row: any) => void) {
+  subscribeToMessages(friendId: string, onInsert: (row: any) => void): (() => void) {
     const channel = this.supabase.channel(`messages-with-${friendId}`);
     // We subscribe to events where current user is either sender or receiver,
     // and let the consumer validate the other party equals friendId.
@@ -462,14 +464,14 @@ export class SupabaseService {
   }
 
   // Find profile by email
-  async findProfileByEmail(email: string) {
+  async findProfileByEmail(email: string): Promise<{ id: string; email: string | null; name: string | null; avatar_url: string | null } | null> {
     const { data, error } = await this.supabase
       .from('profiles')
       .select('id, email, name, avatar_url')
       .eq('email', email)
       .maybeSingle();
     if (error) throw error;
-    return data; // null if not found
+    return data;
   }
 }
 

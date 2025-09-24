@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [3.1.0] - 2025-09-25
+
+### Security
+- Enhanced file storage security with improved access control policies
+- Implemented conversation-based file access restrictions
+- Updated storage path structure to enforce proper access boundaries
+- Fixed file sharing permissions to ensure only conversation participants can access shared files
+
+### Changed
+- Updated file storage implementation to use strict folder hierarchy
+- Modified upload methods to support secure file paths
+- Improved error handling for file operations
+
 ## [3.0.0] - 2025-09-23
 
 ### Added
