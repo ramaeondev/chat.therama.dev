@@ -6,11 +6,8 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install only production dependencies
+# Install all dependencies needed for the build
 COPY package.json package-lock.json* .npmrc* ./
-RUN npm ci --only=production --no-audit --no-fund
-
-# Install dev dependencies for build
 RUN npm ci --no-audit --no-fund
 
 # Copy source
