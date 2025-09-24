@@ -1,7 +1,8 @@
-import { Component, OnDestroy, WritableSignal } from '@angular/core';
+import { Component, OnDestroy, WritableSignal, inject, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, Validators, NonNullableFormBuilder, FormGroup } from '@angular/forms';
 import { signal } from '@angular/core';
+import { NotificationService } from '../../core/services/notification.service';
 import { SupabaseService } from '../../core/supabase.service';
 import { Router } from '@angular/router';
 import { UserMetadata } from '@supabase/supabase-js';
@@ -11,6 +12,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { UserAvatarComponent } from '../../shared/user-avatar/user-avatar';
 import { ProfileDialogComponent } from '../../shared/profile-dialog/profile-dialog';
 import { LogoComponent } from '../../shared/logo/logo';
+import { NotificationToggleComponent } from '../../shared/components/notification-toggle/notification-toggle.component';
+import { ClickOutsideDirective } from '../../shared/directives/click-outside.directive';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,7 +26,9 @@ import { LogoComponent } from '../../shared/logo/logo';
     HttpClientModule, 
     UserAvatarComponent,
     ProfileDialogComponent,
-    LogoComponent
+    LogoComponent,
+    NotificationToggleComponent,
+    ClickOutsideDirective
   ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
@@ -53,6 +58,7 @@ export class Dashboard implements OnDestroy {
   }>>([]);
   private _messageIds = new Set<string>();
   private _unsubscribe: (() => void) | null = null;
+  private notificationService = inject(NotificationService);
   user: WritableSignal<UserMetadata | null> = signal<UserMetadata | null>(null);
 
   // Presence / realtime status
@@ -111,9 +117,24 @@ export class Dashboard implements OnDestroy {
   }
 
   // --- Topbar avatar menu & dialogs ---
-  toggleMenu() {
-    this.showMenu.set(!this.showMenu());
+  @ViewChild('profileMenuButton') profileMenuButton!: ElementRef;
+  
+  toggleMenu(event: Event) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.showMenu.update(prev => !prev);
   }
+
+  onProfileClickOutside(event: Event) {
+    // Only close if the click is outside the menu and not on the toggle button
+    const target = event.target as HTMLElement;
+    const isClickOnButton = this.profileMenuButton?.nativeElement.contains(target);
+    
+    if (!isClickOnButton) {
+      this.showMenu.set(false);
+    }
+  }
+
   
   openProfile() {
     this.showMenu.set(false);
@@ -486,6 +507,23 @@ export class Dashboard implements OnDestroy {
       const id = String(row.id);
       const myId = await this.supabase.getUserId();
       const otherId: string = row.sender_id === myId ? row.receiver_id : row.sender_id;
+      const isFromMe = row.sender_id === myId;
+      
+      // Only show notifications for messages from others
+      if (!isFromMe) {
+        const friend = this.friends().find(f => f.id === otherId);
+        const friendName = friend?.name || friend?.email || 'Someone';
+        const messageText = this.parseMessageContent(row.content as string).text || 'Sent an attachment';
+        
+        // Show notification if not in focus or not viewing this chat
+        if (document.visibilityState !== 'visible' || this.selectedFriendId() !== otherId) {
+          this.notificationService.showNotification(`${friendName} sent a message`, {
+            body: messageText,
+            icon: friend?.avatar_url || undefined
+          });
+        }
+      }
+
       // If this message is for the currently selected friend, append (dedupe first)
       if (this.selectedFriendId() === otherId) {
         if (!this._messageIds.has(id)) {
@@ -493,7 +531,7 @@ export class Dashboard implements OnDestroy {
           const parsed = this.parseMessageContent(row.content as string);
           this.messages.update((arr) => [
             ...arr,
-            { id, from: row.sender_id === myId ? 'me' : 'them', at: new Date(row.created_at), ...parsed },
+            { id, from: isFromMe ? 'me' : 'them', at: new Date(row.created_at), ...parsed },
           ]);
           if (parsed.attachment?.path) {
             this.enrichAttachmentUrl(id, parsed.attachment.path);
@@ -601,5 +639,6 @@ export class Dashboard implements OnDestroy {
     if (this._unsubscribe) this._unsubscribe();
     if (this._unsubPresence) this._unsubPresence();
     if (this._refreshHandle) clearInterval(this._refreshHandle);
+    this.notificationService.ngOnDestroy();
   }
 }

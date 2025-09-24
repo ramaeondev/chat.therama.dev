@@ -3,25 +3,41 @@
   <header class="flex items-center justify-between px-4 py-3 bg-white shadow relative z-10">
     <div class="flex items-center gap-3">
       <app-logo></app-logo>
-      <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-50 text-gray-700 border ml-2"
+      <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border"
             [class.bg-green-100]="realtimeConnected()" [class.text-green-700]="realtimeConnected()"
             [class.bg-gray-100]="!realtimeConnected()" [class.text-gray-600]="!realtimeConnected()">
         {{ realtimeConnected() ? 'Realtime: connected' : 'Realtime: offline' }}
       </span>
     </div>
-    <div class="flex items-center gap-3 text-sm relative">
-      <!-- Avatar button -->
-      <button type="button" (click)="toggleMenu()" class="flex items-center gap-2">
-        <app-user-avatar [src]="profileAvatarUrl()" [name]="profileName()" [userId]="user()?.['id'] || ''" [size]="36" alt="me"></app-user-avatar>
-      </button>
-
-      <!-- Dropdown menu -->
-      <div *ngIf="showMenu()" class="absolute right-0 top-12 w-48 bg-white border rounded shadow-md py-1">
-        <button class="w-full text-left px-3 py-2 hover:bg-gray-50" (click)="openProfile()">My profile</button>
-        <button class="w-full text-left px-3 py-2 hover:bg-gray-50" (click)="openWhatsNew()">What’s new</button>
-        <button class="w-full text-left px-3 py-2 hover:bg-gray-50 text-red-600" (click)="logout()" [disabled]="loggingOut()">
-          {{ loggingOut() ? 'Logging out…' : 'Logout' }}
+    <div class="flex items-center gap-3 text-sm">
+      <!-- Notification Toggle -->
+      <app-notification-toggle></app-notification-toggle>
+      
+      <!-- Profile Dropdown -->
+      <div class="relative">
+        <!-- Avatar button -->
+        <button 
+          #profileMenuButton
+          type="button" 
+          (click)="$event.stopPropagation(); toggleMenu($event)" 
+          class="flex items-center gap-2"
+        >
+          <app-user-avatar [src]="profileAvatarUrl()" [name]="profileName()" [userId]="user()?.['id'] || ''" [size]="36" alt="me"></app-user-avatar>
         </button>
+
+        <!-- Dropdown menu -->
+        <div 
+          *ngIf="showMenu()" 
+          (appClickOutside)="onProfileClickOutside($event)"
+          (click)="$event.stopPropagation()"
+          class="absolute right-0 top-12 w-48 bg-white border rounded shadow-md py-1 z-50"
+        >
+          <button class="w-full text-left px-3 py-2 hover:bg-gray-50" (click)="openProfile()">My profile</button>
+          <button class="w-full text-left px-3 py-2 hover:bg-gray-50" (click)="openWhatsNew()">What's new</button>
+          <button class="w-full text-left px-3 py-2 hover:bg-gray-50 text-red-600" (click)="logout()" [disabled]="loggingOut()">
+            {{ loggingOut() ? 'Logging out...' : 'Logout' }}
+          </button>
+        </div>
       </div>
     </div>
   </header>
