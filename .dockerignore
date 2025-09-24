@@ -1,15 +1,27 @@
+# Node
 node_modules
 npm-debug.log
-.dockerignore
-Dockerfile
-.git
-.gitignore
-.github
+
+# Build and cache
 .angular
 .angular/cache
 dist
 coverage
-.editorconfig
-.vscode
 **/*.tsbuildinfo
 **/*.log
+
+# Version control
+.git
+.gitignore
+.github
+
+# Development
+.vscode
+.editorconfig
+
+# Configuration files
+.dockerignore
+Dockerfile
+
+# Scripts (not needed in production)
+scripts/
