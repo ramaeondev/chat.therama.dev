@@ -41,6 +41,21 @@ Command to create issue:
 gh issue create --title "Centralize upload limits and mime allowlist" --body "Move MAX_UPLOAD_BYTES and ACCEPTED_MIME_LIST to environments or a config service. Acceptance: single source of truth for limits without touching component code."
 ```
 
+## Notifications System
+- Implement push notifications for new messages when app is in background
+- Add in-app notification center to view recent notifications
+- Support for different notification types (new message, friend request, etc.)
+- Notification settings/preferences page
+- Code refs:
+  - `src/app/core/notifications/` (new directory)
+  - `src/app/feature/notifications/` (new components)
+  - Service Worker updates for push notifications
+
+Command to create issue:
+```
+gh issue create --title "Implement Notifications System" --body "Add push notifications and in-app notification center. Includes: service worker registration, notification permissions, in-app notification UI, and user preferences. Code: New modules in src/app/core/notifications/ and src/app/feature/notifications/. Acceptance: Users receive and can view notifications when app is in background."
+```
+
 # Story: Update Dashboard Header with Profile Menu, Avatar, and Changelog Dialog
 
 **Story Description**  
