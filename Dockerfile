@@ -6,14 +6,12 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install all dependencies needed for the build
+# Install dependencies
 COPY package.json package-lock.json* .npmrc* ./
 RUN npm ci --no-audit --no-fund
 
-# Copy source
+# Copy source and build
 COPY . .
-
-# Build Angular app for production
 RUN npm run build:prod
 
 # =========================
