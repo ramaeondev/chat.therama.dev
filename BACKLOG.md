@@ -1,5 +1,20 @@
 # Backlog
 
+## Click-outside functionality for dropdowns
+- Fix the click-outside directive for dropdown menus in the dashboard
+- Consider using a well-tested library like 'ng-click-outside'
+- Ensure proper cleanup of event listeners
+- Add tests for various click scenarios
+- Code refs:
+  - `src/app/shared/directives/click-outside.directive.ts`
+  - `src/app/feature/dashboard/dashboard.ts`
+  - `src/app/feature/dashboard/dashboard.html`
+
+Command to create issue:
+```
+gh issue create --title "Fix click-outside functionality for dropdowns" --body "Implement reliable click-outside behavior for dropdown menus. Consider using 'ng-click-outside' or improve the custom implementation. Code: src/app/shared/directives/click-outside.directive.ts, dashboard.ts, dashboard.html. Acceptance: dropdowns should close when clicking outside and remain open when clicking inside."
+```
+
 ## Signed URL reliability
 - Periodically refresh signed URLs for attachments (every 30–60 minutes)
 - Retry once on image load error to re-sign an expired URL
