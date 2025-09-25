@@ -9,7 +9,7 @@ import 'emoji-picker-element';
   selector: 'app-emoji-picker',
   standalone: true,
   template: `
-    <div class="bg-white border rounded shadow p-2 w-full">
+    <div class="bg-white border rounded shadow p-2 w-full max-h-[300px] sm:max-h-[400px] overflow-auto">
       <div class="flex items-center justify-between mb-2">
         <div class="text-sm font-medium text-gray-700">Emoji</div>
         <button type="button" (click)="onClose()" class="text-xs px-2 py-1 border rounded hover:bg-gray-50">Close</button>
@@ -18,8 +18,8 @@ import 'emoji-picker-element';
     </div>
   `,
   styles: [
-    `:host{display:block;}
-     emoji-picker{ width: 100%; }
+    `:host{display:block; max-width: 100%;}
+     emoji-picker{ width: 100%; height: auto; max-height: 250px; }
     `
   ],
   // Allow custom element <emoji-picker>

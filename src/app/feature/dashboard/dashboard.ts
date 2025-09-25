@@ -1,14 +1,12 @@
-import { Component, OnDestroy, WritableSignal, inject, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnDestroy, WritableSignal, inject, ElementRef, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, Validators, NonNullableFormBuilder, FormGroup } from '@angular/forms';
-import { signal } from '@angular/core';
 import { NotificationService } from '../../core/services/notification.service';
 import { SupabaseService } from '../../core/supabase.service';
 import { Router } from '@angular/router';
 import { UserMetadata } from '@supabase/supabase-js';
-import { FooterComponent } from '../../shared/footer/footer';
 import { EmojiPickerComponent } from '../../shared/emoji-picker/emoji-picker';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { UserAvatarComponent } from '../../shared/user-avatar/user-avatar';
 import { ProfileDialogComponent } from '../../shared/profile-dialog/profile-dialog';
 import { LogoComponent } from '../../shared/logo/logo';
@@ -21,9 +19,7 @@ import { ClickOutsideDirective } from '../../shared/directives/click-outside.dir
   imports: [
     CommonModule, 
     ReactiveFormsModule, 
-    FooterComponent, 
     EmojiPickerComponent, 
-    HttpClientModule, 
     UserAvatarComponent,
     ProfileDialogComponent,
     LogoComponent,
@@ -86,6 +82,13 @@ export class Dashboard implements OnDestroy {
   profileName = signal<string>('');
   profileAvatarUrl = signal<string | null>(null);
   changelog = signal<string>('');
+
+  // Sidebar visibility state
+  showSidebar = signal<boolean>(true);
+
+  toggleSidebar() {
+    this.showSidebar.set(!this.showSidebar());
+  }
 
   // File restrictions (mirror Supabase bucket policies/settings)
   readonly MAX_UPLOAD_BYTES = 1 * 1024 * 1024; // 1 MB
@@ -191,6 +194,31 @@ export class Dashboard implements OnDestroy {
       alert('Failed to remove profile picture. Please try again.');
     }
   }
+
+  async deleteUserAccount() {
+    // Delete the user account
+    try {
+      // Show progress message
+      alert("Your account deletion is in progress. This may take up to a minute depending on your data size.");
+      
+      // Call function to delete the user account
+      const { error } = await this.supabase.deleteAccount();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Show final notification before logout
+      alert("Your account and all associated data have been successfully deleted.");
+      
+      // Sign out and redirect to signin page
+      await this.supabase.signOut();
+      this.router.navigate(['/signin']);
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Failed to delete account. Please try again.');
+    }
+  }
   async loadChangelog() {
     try {
       const text = await this.http.get('assets/CHANGELOG.md', { responseType: 'text' }).toPromise();
@@ -241,7 +269,7 @@ export class Dashboard implements OnDestroy {
       }
       this.uploading.set(true);
       this.uploadProgress.set(0);
-      const { path } = await this.supabase.uploadAttachmentWithProgress(file, (pct) => this.uploadProgress.set(pct));
+      const { path } = await this.supabase.uploadAttachmentWithProgress(file, friendId, (pct) => this.uploadProgress.set(pct));
       const caption = (this.messageForm.getRawValue().text || '').trim();
       const row = await this.supabase.sendAttachmentMessage(friendId, {
         path,
@@ -372,7 +400,7 @@ export class Dashboard implements OnDestroy {
         return;
       }
       this.uploading.set(true);
-      const { path } = await this.supabase.uploadAttachment(file);
+      const { path } = await this.supabase.uploadAttachment(file, friendId);
       const caption = (this.messageForm.getRawValue().text || '').trim();
       const row = await this.supabase.sendAttachmentMessage(friendId, {
         path,

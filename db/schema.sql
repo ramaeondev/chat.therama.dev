@@ -89,51 +89,60 @@ create policy "Users can delete their contacts"
   to authenticated
   using (user_id = auth.uid());
 
-  -- Ensure RLS is enabled on storage.objects (usually enabled by default)
-  -- alter table storage.objects enable row level security;
+  -- Ensure RLS is enabled on storage.objects
+  alter table storage.objects enable row level security;
 
--- Optional: remove any previous conflicting policies for this bucket
--- drop policy if exists "chat-insert-own" on storage.objects;
--- drop policy if exists "chat-select-own" on storage.objects;
--- drop policy if exists "chat-update-own" on storage.objects;
--- drop policy if exists "chat-delete-own" on storage.objects;
+-- Remove any previous conflicting policies for this bucket
+drop policy if exists "chat-insert-own" on storage.objects;
+drop policy if exists "chat-select-own" on storage.objects;
+drop policy if exists "chat-select-conversation" on storage.objects;
+drop policy if exists "chat-update-own" on storage.objects;
+drop policy if exists "chat-delete-own" on storage.objects;
 
--- Insert (upload) only to your own folder: <user_id>/...
+-- Create storage policies for chat attachments
 create policy "chat-insert-own"
-on storage.objects for insert
-to authenticated
-with check (
-  bucket_id = 'chat.therama.dev'
-  and (auth.uid()::text || '/') = split_part(name, '/', 1) || '/'
-);
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'chat.therama.dev' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
 
--- Select (needed for createSignedUrl) from your own objects
-create policy "chat-select-own"
-on storage.objects for select
-to authenticated
-using (
-  bucket_id = 'chat.therama.dev'
-  and (auth.uid()::text || '/') = split_part(name, '/', 1) || '/'
-);
+create policy "chat-select-conversation"
+  on storage.objects for select
+  to authenticated
+  using (
+    bucket_id = 'chat.therama.dev' AND
+    (
+      auth.uid()::text = (storage.foldername(name))[1] OR
+      auth.uid()::text = (storage.foldername(name))[2]
+    )
+  );
 
--- Update (optional) your own objects
 create policy "chat-update-own"
-on storage.objects for update
-to authenticated
-using (
-  bucket_id = 'chat.therama.dev'
-  and (auth.uid()::text || '/') = split_part(name, '/', 1) || '/'
-)
-with check (
-  bucket_id = 'chat.therama.dev'
-  and (auth.uid()::text || '/') = split_part(name, '/', 1) || '/'
-);
+  on storage.objects for update
+  to authenticated
+  using (
+    bucket_id = 'chat.therama.dev' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+  )
+  with check (
+    bucket_id = 'chat.therama.dev' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
 
--- Delete (optional) your own objects
 create policy "chat-delete-own"
-on storage.objects for delete
-to authenticated
-using (
-  bucket_id = 'chat.therama.dev'
-  and (auth.uid()::text || '/') = split_part(name, '/', 1) || '/'
-);
+  on storage.objects for delete
+  to authenticated
+  using (
+    bucket_id = 'chat.therama.dev' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- Note: Storage policies are managed through Supabase dashboard
+-- Bucket: chat
+-- Policies:
+-- 1. chat-insert-own (INSERT): Allow users to upload files in their own folder
+-- 2. chat-select-conversation (SELECT): Allow participants to view conversation files
+-- 3. chat-update-own (UPDATE): Allow users to update their own files
+-- 4. chat-delete-own (DELETE): Allow users to delete their own files
