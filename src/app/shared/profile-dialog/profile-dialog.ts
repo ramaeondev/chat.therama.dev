@@ -1,8 +1,9 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ImageCropperComponent } from 'ngx-image-cropper';
+import { ImageCroppedEvent, ImageCropperComponent } from 'ngx-image-cropper';
 import { UserAvatarComponent } from '../user-avatar/user-avatar';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-profile-dialog',
@@ -17,13 +18,17 @@ export class ProfileDialogComponent {
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<{ name: string; avatarFile?: File }>();
   @Output() removeAvatar = new EventEmitter<void>();
+  @Output() deleteAccount = new EventEmitter<void>();
 
   imageChangedEvent: any = null;
   croppedImageBase64: string | null = null;
   selectedImageFile: File | null = null;
+  deleteConfirmText: string = '';
   cropping = signal<boolean>(false);
   saving = signal<boolean>(false);
   showConfirmDialog = signal<boolean>(false);
+  showDeleteConfirmDialog = signal<boolean>(false);
+  deleting = signal<boolean>(false);
 
   onClose() {
     this.close.emit();
@@ -136,6 +141,8 @@ export class ProfileDialogComponent {
         this.croppedImageBase64 = croppedImageBase64;
         console.log('✓ Successfully set cropped image base64, length:', croppedImageBase64.length);
         console.log('✓ First 100 chars:', croppedImageBase64.substring(0, 100));
+        // Don't close the dialog after cropping
+        // Keep dialog open to allow user to save or cancel
       } else {
         console.warn('❌ No valid cropped image data found');
         alert('Failed to process cropped image. Please try again.');
@@ -225,14 +232,46 @@ export class ProfileDialogComponent {
     }
   }
 
-  async saveProfile() {
-    if (!this.profileName.trim()) return;
-    
-    if (this.croppedImageBase64) {
-      await this.saveCroppedImage();
-    } else {
-      this.save.emit({ name: this.profileName });
+  onSaveProfile() {
+    if (this.saving()) return;
+    if (!this.profileName.trim()) {
+      alert('Please enter your name');
+      return;
     }
+
+    this.saving.set(true);
+
+    // Prepare the avatar file if we have a cropped image
+    let avatarFile: File | undefined = undefined;
+    if (this.croppedImageBase64) {
+      avatarFile = this.base64ToFile(
+        this.croppedImageBase64,
+        'profile-picture.png'
+      ) || undefined;
+      
+      if (!avatarFile) {
+        console.error('Failed to convert cropped image to file');
+        alert('Failed to process the image. Please try again.');
+        this.saving.set(false);
+        return;
+      }
+      
+      // Reset cropping state but don't close dialog
+      this.cropping.set(false);
+      this.imageChangedEvent = null;
+      this.croppedImageBase64 = null;
+    }
+
+    // Emit the save event with the name and optional avatar file
+    this.save.emit({
+      name: this.profileName.trim(),
+      ...(avatarFile && { avatarFile })
+    });
+    
+    // Don't close the dialog after saving
+    setTimeout(() => {
+      this.saving.set(false);
+    }, 1000);
   }
 
   onRemoveAvatarClick() {
@@ -272,5 +311,26 @@ export class ProfileDialogComponent {
       console.error('Error converting base64 to file:', error);
       return null;
     }
+  }
+
+  onDeleteAccount() {
+    // Show the confirmation dialog
+    this.showDeleteConfirmDialog.set(true);
+  }
+  
+  confirmDeleteAccount() {
+    if (this.deleting()) return;
+    
+    this.deleting.set(true);
+    // Emit the deleteAccount event for the parent component to handle
+    this.deleteAccount.emit();
+    
+    // In a real implementation, we would wait for the deletion to complete
+    // For now, we'll just close the dialog
+    this.showDeleteConfirmDialog.set(false);
+    setTimeout(() => {
+      this.saving.set(false);
+      // Don't close the dialog
+    }, 1000);
   }
 }

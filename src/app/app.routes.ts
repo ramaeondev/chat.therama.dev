@@ -3,12 +3,13 @@ import { Login } from './login/login';
 import { Signup } from './signup/signup';
 import { Dashboard } from './feature/dashboard/dashboard';
 import { LandingComponent } from './feature/landing/landing';
+import { authGuard } from './core/guards/auth.guard';
 
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
   { path: 'signin', component: Login },
   { path: 'signup', component: Signup },
-  { path: 'dashboard', component: Dashboard },
+  { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: '**', redirectTo: '' },
 ];

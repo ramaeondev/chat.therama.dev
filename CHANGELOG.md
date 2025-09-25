@@ -4,18 +4,56 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
-## [4.0.0] - 2025-09-26
+## [3.2.0] - 2025-09-26
 
 ### Added
-- Implemented Delete Account functionality in My Profile dialog
-- Added confirmation flow requiring explicit user confirmation
-- Added progress and success notifications during account deletion process
+- **Delete Account Functionality**:
+  - Implemented comprehensive account deletion feature in My Profile dialog
+  - Added confirmation flow requiring explicit user confirmation with "DELETE" text input
+  - Added progress and success notifications during account deletion process
+  - Implemented complete data cleanup: messages, attachments, avatar files, and profile data
+
+- **Authentication Guard**:
+  - Added route protection for dashboard with `authGuard`
+  - Ensures only authenticated users can access the dashboard
+
+- **Enhanced User Experience**:
+  - Inline save buttons in profile dialog (save button next to name field)
+  - Improved responsive design across all components
+  - Better mobile support with flexible layouts and proper overflow handling
+  - Enhanced emoji picker with better sizing and scrolling capabilities
 
 ### Fixed
-- Fixed profile picture save button to not close dialog
-- Fixed name save button to not close dialog
-- Fixed Delete Account functionality to properly delete user data
-- Improved error handling for account management operations
+- **Profile Dialog Improvements**:
+  - Fixed profile picture save button to not close dialog unexpectedly
+  - Fixed name save button to not close dialog unexpectedly
+  - Improved error handling for account management operations
+  - Better user feedback during save operations
+
+- **Dashboard Responsiveness**:
+  - Fixed overflow issues in chat area and messages list
+  - Improved mobile layout with proper flex wrapping
+  - Enhanced drop zone styling and responsiveness
+  - Better handling of long content in dialogs
+
+- **UI/UX Enhancements**:
+  - Removed footer component from dashboard for cleaner interface
+  - Improved What's New dialog with better responsive design
+  - Enhanced button layouts and spacing throughout the application
+
+### Changed
+- **Application Architecture**:
+  - Updated version from 4.0.0 to 3.2.0 in package.json
+  - Restructured profile dialog component for better usability
+  - Improved component organization and signal-based state management
+  - Enhanced error handling and user feedback systems
+
+### Security
+- **Account Deletion Security**:
+  - Implemented secure account deletion with proper data cleanup
+  - Added confirmation requirements to prevent accidental deletions
+  - Proper cleanup of user data from all database tables and storage
+  - Secure sign-out process after account deletion
 
 ## [3.1.0] - 2025-09-25
 

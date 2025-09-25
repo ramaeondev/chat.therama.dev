@@ -1,12 +1,10 @@
-import { Component, OnDestroy, WritableSignal, inject, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnDestroy, WritableSignal, inject, ElementRef, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, Validators, NonNullableFormBuilder, FormGroup } from '@angular/forms';
-import { signal } from '@angular/core';
 import { NotificationService } from '../../core/services/notification.service';
 import { SupabaseService } from '../../core/supabase.service';
 import { Router } from '@angular/router';
 import { UserMetadata } from '@supabase/supabase-js';
-import { FooterComponent } from '../../shared/footer/footer';
 import { EmojiPickerComponent } from '../../shared/emoji-picker/emoji-picker';
 import { HttpClient } from '@angular/common/http';
 import { UserAvatarComponent } from '../../shared/user-avatar/user-avatar';
@@ -21,7 +19,6 @@ import { ClickOutsideDirective } from '../../shared/directives/click-outside.dir
   imports: [
     CommonModule, 
     ReactiveFormsModule, 
-    FooterComponent, 
     EmojiPickerComponent, 
     UserAvatarComponent,
     ProfileDialogComponent,
@@ -195,6 +192,31 @@ export class Dashboard implements OnDestroy {
     } catch (error) {
       console.error('Error removing profile picture:', error);
       alert('Failed to remove profile picture. Please try again.');
+    }
+  }
+
+  async deleteUserAccount() {
+    // Delete the user account
+    try {
+      // Show progress message
+      alert("Your account deletion is in progress. This may take up to a minute depending on your data size.");
+      
+      // Call function to delete the user account
+      const { error } = await this.supabase.deleteAccount();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Show final notification before logout
+      alert("Your account and all associated data have been successfully deleted.");
+      
+      // Sign out and redirect to signin page
+      await this.supabase.signOut();
+      this.router.navigate(['/signin']);
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Failed to delete account. Please try again.');
     }
   }
   async loadChangelog() {

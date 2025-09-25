@@ -39,6 +39,80 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  // Delete user account
+  async deleteAccount(): Promise<{ error: Error | null }> {
+    try {
+      const myId = await this.getUserId();
+      if (!myId) throw new Error('Not authenticated');
+      
+      // Delete all user data from all tables
+      // First delete messages
+      const { error: messagesError } = await this.supabase
+        .from('messages')
+        .delete()
+        .eq('user_id', myId);
+      
+      if (messagesError) throw messagesError;
+      
+      // Delete attachments from storage
+      const { data: attachments } = await this.supabase
+        .from('attachments')
+        .select('path')
+        .eq('user_id', myId);
+        
+      if (attachments && attachments.length > 0) {
+        for (const attachment of attachments) {
+          await this.supabase.storage
+            .from('attachments')
+            .remove([attachment.path]);
+        }
+      }
+      
+      // Delete attachments records
+      const { error: attachmentsError } = await this.supabase
+        .from('attachments')
+        .delete()
+        .eq('user_id', myId);
+        
+      if (attachmentsError) throw attachmentsError;
+      
+      // Delete avatar from storage
+      const { data: profile } = await this.supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', myId)
+        .single();
+        
+      if (profile && profile.avatar_url) {
+        const avatarPath = profile.avatar_url.split('/').pop();
+        if (avatarPath) {
+          await this.supabase.storage
+            .from('avatars')
+            .remove([avatarPath]);
+        }
+      }
+      
+      // Delete profile
+      const { error: profileError } = await this.supabase
+        .from('profiles')
+        .delete()
+        .eq('id', myId);
+        
+      if (profileError) throw profileError;
+      
+      // Sign out the user - in a real app, you would call a server-side function
+      // to delete the user from Supabase Auth as client-side can't do this
+      const { error: authError } = await this.supabase.auth.signOut();
+      
+      if (authError) throw authError;
+      
+      return { error: null };
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      return { error: error as Error };
+    }
+  }
+
   // Upload avatar and return a signed URL, and optionally update profile.avatar_url
   async removeAvatar(): Promise<void> {
     const myId = await this.getUserId();
