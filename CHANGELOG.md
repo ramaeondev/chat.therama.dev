@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [4.0.0] - 2025-09-26
+
+### Added
+- Implemented Delete Account functionality in My Profile dialog
+- Added confirmation flow requiring explicit user confirmation
+- Added progress and success notifications during account deletion process
+
+### Fixed
+- Fixed profile picture save button to not close dialog
+- Fixed name save button to not close dialog
+- Fixed Delete Account functionality to properly delete user data
+- Improved error handling for account management operations
+
 ## [3.1.0] - 2025-09-25
 
 ### Security
