@@ -4,6 +4,78 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [3.4.4] - 2025-09-27
+
+### Changed
+- **Angular Control Flow**:
+  - Refactored all components to use new Angular 17+ control flow syntax
+  - Replaced `*ngIf`, `*ngFor`, and `*ngSwitch` with `@if`, `@for`, and `@switch`
+  - Improved template type checking and IDE support
+  - Removed unused imports and cleaned up component templates
+
+## [3.4.2] - 2025-09-27
+
+### Added
+- **Improved Empty States**:
+  - Added friendly empty state when no friends are available
+  - Added clear messaging when no conversation is selected
+  - Included helpful icons and call-to-action buttons
+
+### Changed
+- **UI/UX Improvements**:
+  - Disabled message input and buttons when no user is selected
+  - Enhanced visual feedback for disabled states
+  - Improved button and input field states for better usability
+  - Updated placeholder text to guide users on next steps
+
+### Fixed
+- **Accessibility**:
+  - Added proper disabled states to form controls
+  - Improved focus states for better keyboard navigation
+  - Enhanced contrast for better readability
+
+## [3.4.1] - 2025-09-27
+
+### Changed
+- **Header Component Refactor**:
+  - Decoupled header component from parent events
+  - Moved logout and profile management logic into the header component
+  - Improved admin dashboard navigation with toggle functionality
+  - Added proper error handling and user feedback with snackbar notifications
+
+### Fixed
+- **Admin Dashboard**:
+  - Fixed DatePipe provider error in admin dashboard
+  - Improved error handling for profile updates
+  - Removed console.log statements for cleaner production code
+
+## [3.4.0] - 2025-09-27
+
+### Added
+- **Enhanced User Profile**:
+  - Added email display in user profile
+  - Included last sign-in timestamp with proper formatting
+  - Added member since date to show account creation date
+  - Improved layout and organization of profile information
+
+### Changed
+- **Direct Data Fetching**:
+  - Profile dialog now fetches user data directly from Supabase
+  - Removed prop drilling through multiple components
+  - Improved component independence and reusability
+
+### Fixed
+- **Bug Fixes**:
+  - Fixed DatePipe injection issues in Dashboard component
+  - Resolved template binding issues in profile dialog
+  - Fixed duplicate field display in profile view
+  - Improved error handling for data fetching
+
+### Technical
+- Refactored ProfileDialogComponent to use Angular signals
+- Updated component templates to use modern Angular syntax
+- Improved error handling and loading states
+
 ## [3.3.0] - 2025-09-26
 
 ### Added

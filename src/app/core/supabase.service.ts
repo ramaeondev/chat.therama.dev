@@ -6,21 +6,21 @@ import { environment } from '../../environments/environment';
   providedIn: 'root',
 })
 export class SupabaseService {
-  private supabase: SupabaseClient;
+  client: SupabaseClient;
 
   constructor() {
-    this.supabase = createClient(
+    this.client = createClient(
       environment.supabaseUrl,
       environment.supabaseKey
     );
   }
 
-  async getMyProfile(): Promise<{ id: string; email: string | null; name: string | null; avatar_url: string | null } | null> {
+  async getMyProfile(): Promise<{ id: string; email: string | null; name: string | null; avatar_url: string | null; is_admin?: boolean } | null> {
     const myId = await this.getUserId();
     if (!myId) return null;
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('profiles')
-      .select('id, email, name, avatar_url')
+      .select('id, email, name, avatar_url, is_admin')
       .eq('id', myId)
       .maybeSingle();
     if (error) throw error;
@@ -32,7 +32,7 @@ export class SupabaseService {
     const myId = await this.getUserId();
     if (!myId) throw new Error('Not authenticated');
     if (!name || !name.trim()) throw new Error('Name cannot be empty');
-    const { error } = await this.supabase
+    const { error } = await this.client
       .from('profiles')
       .update({ name: name.trim() })
       .eq('id', myId);
@@ -47,7 +47,7 @@ export class SupabaseService {
       
       // Delete all user data from all tables
       // First delete messages
-      const { error: messagesError } = await this.supabase
+      const { error: messagesError } = await this.client
         .from('messages')
         .delete()
         .eq('user_id', myId);
@@ -55,21 +55,21 @@ export class SupabaseService {
       if (messagesError) throw messagesError;
       
       // Delete attachments from storage
-      const { data: attachments } = await this.supabase
+      const { data: attachments } = await this.client
         .from('attachments')
         .select('path')
         .eq('user_id', myId);
         
       if (attachments && attachments.length > 0) {
         for (const attachment of attachments) {
-          await this.supabase.storage
+          await this.client.storage
             .from('attachments')
             .remove([attachment.path]);
         }
       }
       
       // Delete attachments records
-      const { error: attachmentsError } = await this.supabase
+      const { error: attachmentsError } = await this.client
         .from('attachments')
         .delete()
         .eq('user_id', myId);
@@ -77,7 +77,7 @@ export class SupabaseService {
       if (attachmentsError) throw attachmentsError;
       
       // Delete avatar from storage
-      const { data: profile } = await this.supabase
+      const { data: profile } = await this.client
         .from('profiles')
         .select('avatar_url')
         .eq('id', myId)
@@ -86,14 +86,14 @@ export class SupabaseService {
       if (profile && profile.avatar_url) {
         const avatarPath = profile.avatar_url.split('/').pop();
         if (avatarPath) {
-          await this.supabase.storage
+          await this.client.storage
             .from('avatars')
             .remove([avatarPath]);
         }
       }
       
       // Delete profile
-      const { error: profileError } = await this.supabase
+      const { error: profileError } = await this.client
         .from('profiles')
         .delete()
         .eq('id', myId);
@@ -102,7 +102,7 @@ export class SupabaseService {
       
       // Sign out the user - in a real app, you would call a server-side function
       // to delete the user from Supabase Auth as client-side can't do this
-      const { error: authError } = await this.supabase.auth.signOut();
+      const { error: authError } = await this.client.auth.signOut();
       
       if (authError) throw authError;
       
@@ -119,7 +119,7 @@ export class SupabaseService {
     if (!myId) throw new Error('Not authenticated');
     
     // Get current profile to find the avatar path
-    const { data: profile } = await this.supabase
+    const { data: profile } = await this.client
       .from('profiles')
       .select('avatar_url')
       .eq('id', myId)
@@ -132,7 +132,7 @@ export class SupabaseService {
       
       if (path) {
         // Delete the file from storage
-        const { error: deleteError } = await this.supabase.storage
+        const { error: deleteError } = await this.client.storage
           .from('chat.therama.dev')
           .remove([path]);
           
@@ -143,7 +143,7 @@ export class SupabaseService {
       }
       
       // Update profile to remove avatar_url
-      const { error } = await this.supabase
+      const { error } = await this.client
         .from('profiles')
         .update({ avatar_url: null })
         .eq('id', myId);
@@ -159,7 +159,7 @@ export class SupabaseService {
     const ext = (file.name.split('.').pop() || 'png').toLowerCase();
     const path = `${myId}/avatar.${ext}`;
     // Overwrite allowed: use upsert true via REST XHR for consistent behavior
-    const { data: sessionData } = await this.supabase.auth.getSession();
+    const { data: sessionData } = await this.client.auth.getSession();
     const accessToken = sessionData.session?.access_token;
     if (!accessToken) throw new Error('Missing access token');
     const urlUpload = `${environment.supabaseUrl}/storage/v1/object/${encodeURIComponent(bucket)}/${encodeURIComponent(path)}`;
@@ -179,7 +179,7 @@ export class SupabaseService {
     // Create a long-lived signed URL (e.g., 30 days); can refresh later if needed
     const signed = await this.getSignedUrl(path, 30 * 24 * 3600);
     if (updateProfile) {
-      const { error } = await this.supabase.from('profiles').update({ avatar_url: signed }).eq('id', myId);
+      const { error } = await this.client.from('profiles').update({ avatar_url: signed }).eq('id', myId);
       if (error) throw error;
     }
     return { path, url: signed };
@@ -196,7 +196,7 @@ export class SupabaseService {
     const rand = Math.random().toString(36).slice(2, 8);
     const path = `${myId}/${friendId}/${Date.now()}_${rand}.${ext}`;
 
-    const { data: sessionData } = await this.supabase.auth.getSession();
+    const { data: sessionData } = await this.client.auth.getSession();
     const accessToken = sessionData.session?.access_token;
     if (!accessToken) throw new Error('Missing access token');
 
@@ -232,7 +232,7 @@ export class SupabaseService {
     metadata: Record<string, any>,
     onSync: (channel: RealtimeChannel) => void
   ) {
-    const channel = this.supabase.channel(`presence:${room}`, {
+    const channel = this.client.channel(`presence:${room}`, {
       config: { presence: { key } },
     });
     channel.on('presence', { event: 'sync' }, () => onSync(channel));
@@ -242,12 +242,12 @@ export class SupabaseService {
       }
     });
     return () => {
-      this.supabase.removeChannel(channel);
+      this.client.removeChannel(channel);
     };
   }
 
   async signUpWithOtp(email: string, name: string) {
-    return this.supabase.auth.signInWithOtp({
+    return this.client.auth.signInWithOtp({
       email,
       options: { data: { name } },
     });
@@ -255,7 +255,7 @@ export class SupabaseService {
 
   // Sign in with OTP restricted to existing users only (no auto sign-up)
   async signInWithOtpExistingOnly(email: string) {
-    const { data, error } = await this.supabase.auth.signInWithOtp({
+    const { data, error } = await this.client.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: false,
@@ -267,7 +267,7 @@ export class SupabaseService {
 
   // Verify OTP
   async verifyOtp(email: string, token: string) {
-    const { data, error } = await this.supabase.auth.verifyOtp({
+    const { data, error } = await this.client.auth.verifyOtp({
       email,
       token,
       type: 'email',
@@ -278,18 +278,18 @@ export class SupabaseService {
 
   // Get current session
   async getSession(): Promise<Session | null> {
-    const { data } = await this.supabase.auth.getSession();
+    const { data } = await this.client.auth.getSession();
     return data.session;
   }
 
   // Sign out
   async signOut() {
-    await this.supabase.auth.signOut();
+    await this.client.auth.signOut();
   }
 
   // ---------- Profiles & Messages (App Data) ----------
   async getUser(): Promise<User | null> {
-    const { data } = await this.supabase.auth.getUser();
+    const { data } = await this.client.auth.getUser();
     return data.user ?? null;
   }
 
@@ -304,13 +304,13 @@ export class SupabaseService {
     if (!user) return;
     const email = user.email ?? null;
     const name = (user.user_metadata?.['name'] as string | undefined) ?? null;
-    await this.supabase.from('profiles').upsert({ id: user.id, email, name }).eq('id', user.id);
+    await this.client.from('profiles').upsert({ id: user.id, email, name }).eq('id', user.id);
   }
 
   // List all other profiles as friends (no filtering)
   async listFriends() {
     const myId = await this.getUserId();
-    const query = this.supabase.from('profiles').select('id, email, name, avatar_url').order('name', { ascending: true });
+    const query = this.client.from('profiles').select('id, email, name, avatar_url').order('name', { ascending: true });
     const { data, error } = await query;
     if (error) throw error;
     const all = data || [];
@@ -322,7 +322,7 @@ export class SupabaseService {
     const myId = await this.getUserId();
     if (!myId) throw new Error('Not authenticated');
     if (myId === contactId) return; // no-op
-    const { error } = await this.supabase
+    const { error } = await this.client
       .from('contacts')
       .upsert({ user_id: myId, contact_id: contactId })
       .eq('user_id', myId)
@@ -334,7 +334,7 @@ export class SupabaseService {
   private async getContactIds(): Promise<string[]> {
     const myId = await this.getUserId();
     if (!myId) return [];
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('contacts')
       .select('contact_id')
       .eq('user_id', myId);
@@ -347,7 +347,7 @@ export class SupabaseService {
     const myId = await this.getUserId();
     if (!myId) return [];
     // Fetch minimal columns then compute counterparts client-side
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('messages')
       .select('sender_id, receiver_id')
       .or(`sender_id.eq.${myId},receiver_id.eq.${myId}`)
@@ -364,7 +364,7 @@ export class SupabaseService {
   // Fetch profiles for a given set of ids
   private async getProfilesByIds(ids: string[]) {
     if (!ids.length) return [] as any[];
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('profiles')
       .select('id, email, name, avatar_url')
       .in('id', ids);
@@ -386,7 +386,7 @@ export class SupabaseService {
   private async getLastMessagesForIds(otherIds: string[]) {
     const myId = await this.getUserId();
     if (!myId || otherIds.length === 0) return {} as Record<string, any>;
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('messages')
       .select('id, sender_id, receiver_id, content, created_at')
       .or(`and(sender_id.eq.${myId},receiver_id.in.(${otherIds.join(',')})),and(receiver_id.eq.${myId},sender_id.in.(${otherIds.join(',')}))`)
@@ -447,7 +447,7 @@ export class SupabaseService {
   async listMessages(friendId: string) {
     const myId = await this.getUserId();
     if (!myId) return [];
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('messages')
       .select('id, sender_id, receiver_id, content, created_at')
       .or(`and(sender_id.eq.${myId},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${myId})`)
@@ -459,7 +459,7 @@ export class SupabaseService {
   async sendMessage(friendId: string, content: string) {
     const myId = await this.getUserId();
     if (!myId) throw new Error('Not authenticated');
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('messages')
       .insert({ sender_id: myId, receiver_id: friendId, content })
       .select()
@@ -479,7 +479,7 @@ export class SupabaseService {
     const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
     const rand = Math.random().toString(36).slice(2, 8);
     const path = `${myId}/${friendId}/${Date.now()}_${rand}.${ext}`;
-    const { error: uploadError } = await this.supabase.storage
+    const { error: uploadError } = await this.client.storage
       .from(bucket)
       .upload(path, file, { contentType: file.type, upsert: false });
     if (uploadError) throw uploadError;
@@ -506,7 +506,7 @@ export class SupabaseService {
   // Generate a signed URL for a given storage path in the attachments bucket.
   async getSignedUrl(path: string, expiresInSeconds = 3600): Promise<string> {
     const bucket = 'chat.therama.dev';
-    const { data, error } = await this.supabase.storage
+    const { data, error } = await this.client.storage
       .from(bucket)
       .createSignedUrl(path, expiresInSeconds);
     if (error) throw error;
@@ -514,7 +514,7 @@ export class SupabaseService {
   }
 
   subscribeToMessages(friendId: string, onInsert: (row: any) => void): (() => void) {
-    const channel = this.supabase.channel(`messages-with-${friendId}`);
+    const channel = this.client.channel(`messages-with-${friendId}`);
     // We subscribe to events where current user is either sender or receiver,
     // and let the consumer validate the other party equals friendId.
     // This avoids missing events due to limited filter syntax.
@@ -533,13 +533,13 @@ export class SupabaseService {
       channel.subscribe();
     });
     return () => {
-      this.supabase.removeChannel(channel);
+this.client.removeChannel(channel);
     };
   }
 
   // Find profile by email
   async findProfileByEmail(email: string): Promise<{ id: string; email: string | null; name: string | null; avatar_url: string | null } | null> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.client
       .from('profiles')
       .select('id, email, name, avatar_url')
       .eq('email', email)

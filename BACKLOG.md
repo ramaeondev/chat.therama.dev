@@ -1,14 +1,14 @@
 # Backlog
 
 ## Click-outside functionality for dropdowns
-- Fix the click-outside directive for dropdown menus in the dashboard
+- Reimplement the click-outside functionality that was removed from the header component
 - Consider using a well-tested library like 'ng-click-outside'
 - Ensure proper cleanup of event listeners
 - Add tests for various click scenarios
 - Code refs:
-  - `src/app/shared/directives/click-outside.directive.ts`
-  - `src/app/feature/dashboard/dashboard.ts`
-  - `src/app/feature/dashboard/dashboard.html`
+  - `src/app/shared/directives/click-outside.directive.ts` (removed, needs reimplementation)
+  - `src/app/shared/components/header/header.component.ts` (temporary solution in place)
+  - `src/app/shared/components/header/header.component.html`
 
 Command to create issue:
 ```

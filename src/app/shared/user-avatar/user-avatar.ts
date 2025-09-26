@@ -7,30 +7,30 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <div class="relative inline-block" [style.width.px]="size" [style.height.px]="size">
-      <ng-container *ngIf="src; else initialsTpl">
+      @if (src) {
         <img [src]="src" [alt]="alt || 'avatar'"
              class="rounded-full object-cover w-full h-full"
              [style.background]="backgroundColor" />
-      </ng-container>
-      <ng-template #initialsTpl>
+      } @else {
         <div class="rounded-full w-full h-full flex items-center justify-center font-semibold text-white"
              [style.background]="backgroundColor"
              [style.fontSize.px]="fontSize"
              [attr.aria-label]="alt || 'avatar'">
           {{ initials(name) }}
         </div>
-      </ng-template>
+      }
       
       <!-- Status indicator -->
-      <div *ngIf="status !== undefined" 
-           class="absolute bottom-0 right-0 rounded-full border-2 border-white"
-           [class.bg-green-500]="status === 'online'"
-           [class.bg-gray-400]="status === 'offline'"
-           [class.bg-yellow-500]="status === 'away'"
-           [class.bg-red-500]="status === 'busy'"
-           [style.width.px]="statusSize"
-           [style.height.px]="statusSize">
-      </div>
+      @if (status !== undefined) {
+        <div class="absolute bottom-0 right-0 rounded-full border-2 border-white"
+             [class.bg-green-500]="status === 'online'"
+             [class.bg-gray-400]="status === 'offline'"
+             [class.bg-yellow-500]="status === 'away'"
+             [class.bg-red-500]="status === 'busy'"
+             [style.width.px]="statusSize"
+             [style.height.px]="statusSize">
+        </div>
+      }
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush

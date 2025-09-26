@@ -1,20 +1,33 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, Output, signal, inject, OnInit } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ImageCroppedEvent, ImageCropperComponent } from 'ngx-image-cropper';
+import { ImageCropperComponent } from 'ngx-image-cropper';
 import { UserAvatarComponent } from '../user-avatar/user-avatar';
-import { Router } from '@angular/router';
+import { SupabaseService } from '../../core/supabase.service';
 
 @Component({
   selector: 'app-profile-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageCropperComponent, UserAvatarComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    ImageCropperComponent, 
+    UserAvatarComponent
+  ],
   templateUrl: './profile-dialog.html',
   styleUrl: './profile-dialog.scss'
 })
-export class ProfileDialogComponent {
+export class ProfileDialogComponent implements OnInit {
+  private supabase = inject(SupabaseService);
+  private datePipe = inject(DatePipe);
+  
   @Input() profileName: string = '';
   @Input() profileAvatarUrl: string | null = null;
+  
+  // User data that will be loaded directly
+  email = signal<string>('');
+  lastSignIn = signal<string>('');
+  memberSince = signal<string>('');
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<{ name: string; avatarFile?: File }>();
   @Output() removeAvatar = new EventEmitter<void>();
@@ -29,6 +42,51 @@ export class ProfileDialogComponent {
   showConfirmDialog = signal<boolean>(false);
   showDeleteConfirmDialog = signal<boolean>(false);
   deleting = signal<boolean>(false);
+
+  async ngOnInit() {
+    await this.loadUserData();
+  }
+
+  private async loadUserData() {
+    try {
+      const { data: { user }, error } = await this.supabase.client.auth.getUser();
+      
+      if (error) throw error;
+      if (!user) return;
+      
+      this.email.set(user.email || '');
+      
+      // Format dates
+      if (user.last_sign_in_at) {
+        const lastSignInDate = new Date(user.last_sign_in_at);
+        this.lastSignIn.set(this.formatDate(lastSignInDate));
+      }
+      
+      if (user.created_at) {
+        const createdAt = new Date(user.created_at);
+        this.memberSince.set(this.formatDate(createdAt));
+      }
+      
+      // If profile name is not provided, use user's name or email
+      const fullName = user.user_metadata ? (user.user_metadata as any)['full_name'] : null;
+      if (!this.profileName && (fullName || user.email)) {
+        this.profileName = fullName || user.email?.split('@')[0] || '';
+      }
+      
+      // If avatar URL is not provided, try to get it from user_metadata
+      const avatarUrl = user.user_metadata ? (user.user_metadata as any)['avatar_url'] : null;
+      if (!this.profileAvatarUrl && avatarUrl) {
+        this.profileAvatarUrl = avatarUrl;
+      }
+      
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  }
+  
+  private formatDate(date: Date): string {
+    return this.datePipe.transform(date, 'medium') || '';
+  }
 
   onClose() {
     this.close.emit();

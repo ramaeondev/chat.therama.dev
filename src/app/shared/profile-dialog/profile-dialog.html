@@ -1,24 +1,26 @@
 <!-- Confirmation Dialog -->
-  <div *ngIf="showConfirmDialog()" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4" (click)="$event.stopPropagation()">
-      <h3 class="text-lg font-medium mb-4">Remove Profile Picture</h3>
-      <p class="text-gray-600 mb-6">Are you sure you want to remove your profile picture?</p>
-      <div class="flex justify-end gap-3">
-        <button 
-          (click)="cancelRemoveAvatar()"
-          class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-        >
-          Cancel
-        </button>
-        <button 
-          (click)="confirmRemoveAvatar()"
-          class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600"
-        >
-          Remove
-        </button>
+  @if (showConfirmDialog()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4" (click)="$event.stopPropagation()">
+        <h3 class="text-lg font-medium mb-4">Remove Profile Picture</h3>
+        <p class="text-gray-600 mb-6">Are you sure you want to remove your profile picture?</p>
+        <div class="flex justify-end gap-3">
+          <button 
+            (click)="cancelRemoveAvatar()"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+          <button 
+            (click)="confirmRemoveAvatar()"
+            class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600"
+          >
+            Remove
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  }
 
   <!-- Profile Dialog -->
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40" (click)="onClose()">
@@ -49,27 +51,29 @@
             #fileInput
           />
           <div class="flex justify-center gap-2 mt-4">
-            <button
-              *ngIf="profileAvatarUrl"
-              (click)="fileInput.click()"
-              class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-            >
-              Change
-            </button>
-            <button
-              *ngIf="!profileAvatarUrl"
-              (click)="fileInput.click()"
-              class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-            >
-              Upload
-            </button>
-            <button
-              *ngIf="profileAvatarUrl"
-              (click)="onRemoveAvatarClick()"
-              class="px-3 py-1 text-sm text-white rounded transition-colors bg-red-500 hover:bg-red-600"
-            >
-              Remove
-            </button>
+            @if (profileAvatarUrl) {
+              <button
+                (click)="fileInput.click()"
+                class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                Change
+              </button>
+            } @else {
+              <button
+                (click)="fileInput.click()"
+                class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                Upload
+              </button>
+            }
+            @if (profileAvatarUrl) {
+              <button
+                (click)="onRemoveAvatarClick()"
+                class="px-3 py-1 text-sm text-white rounded transition-colors bg-red-500 hover:bg-red-600"
+              >
+                Remove
+              </button>
+            }
           </div>
         </div>
 
@@ -115,37 +119,75 @@
         }
       </div>
 
-      <div class="mb-4">
-        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-        <div class="flex">
-          <input 
-            type="text" 
-            id="name" 
-            [(ngModel)]="profileName" 
-            (input)="onNameInput($event)"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <!-- Name Field -->
+        <div class="md:col-span-2">
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+          <div class="flex">
+            <input 
+              type="text" 
+              id="name" 
+              [(ngModel)]="profileName" 
+              (input)="onNameInput($event)"
+              class="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your name"
+            />
+            <button
               (click)="onSaveProfile()"
               [disabled]="saving() || profileName.length < 3"
-              class="px-3 py-2 bg-blue-500 text-white border border-blue-500 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-4 bg-blue-500 text-white border border-blue-500 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-r-md"
               title="Save name"
             >
-              ✓
+              {{ saving() ? 'Saving...' : 'Save' }}
             </button>
+          </div>
         </div>
+
+        <!-- Email Field (Readonly) -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <div class="relative">
+            <input 
+              type="email" 
+              [value]="email()"
+              readonly
+              class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-600 cursor-not-allowed"
+            />
+          </div>
+        </div>
+
+        <!-- Last Sign In -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Last Sign In</label>
+          <div class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-600 text-sm">
+            {{ lastSignIn() || 'N/A' }}
+          </div>
+        </div>
+
+        <!-- Member Since -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Member Since</label>
+          <div class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-600 text-sm">
+            {{ memberSince() || 'N/A' }}
+          </div>
+        </div>
+
       </div>
 
       <!-- Delete Account Section -->
-      <div class="mt-8 pt-4 border-t border-gray-200">
-        <h3 class="text-lg font-medium text-red-600">Danger Zone</h3>
-        <p class="text-sm text-gray-500 mt-1">Once you delete your account, there is no going back. Please be certain.</p>
-        <button
-          (click)="showDeleteConfirmDialog.set(true)"
-          class="mt-3 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-        >
-          Delete Account
-        </button>
+      <div class="mt-6 pt-4 border-t border-gray-200">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-sm font-medium text-red-600">Danger Zone</h3>
+            <p class="text-xs text-gray-500">Permanently delete your account and all data</p>
+          </div>
+          <button
+            (click)="showDeleteConfirmDialog.set(true)"
+            class="px-3 py-1.5 text-sm bg-white border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors"
+          >
+            Delete Account
+          </button>
+        </div>
       </div>
 
       <!-- Bottom buttons removed as they're now inline with the name field -->
@@ -153,33 +195,35 @@
   </div>
 
 <!-- Delete Account Confirmation Dialog -->
-<div *ngIf="showDeleteConfirmDialog()" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-  <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-    <h3 class="text-xl font-bold text-red-600 mb-4">Delete Account</h3>
-    <p class="text-gray-700 mb-4">This action <span class="font-bold">cannot be undone</span>. All your data, messages, and files will be permanently deleted.</p>
-    <p class="text-gray-700 mb-4">To confirm, please type "DELETE" in the field below:</p>
-    
-    <input 
-      type="text" 
-      [(ngModel)]="deleteConfirmText" 
-      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
-      placeholder="Type DELETE to confirm"
-    />
-    
-    <div class="flex justify-end gap-3">
-      <button 
-        (click)="showDeleteConfirmDialog.set(false)" 
-        class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
-      >
-        Cancel
-      </button>
-      <button 
-        (click)="confirmDeleteAccount()" 
-        [disabled]="deleteConfirmText !== 'DELETE' || deleting()"
-        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors disabled:opacity-50"
-      >
-        {{ deleting() ? 'Deleting...' : 'Delete Account' }}
-      </button>
+@if (showDeleteConfirmDialog()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+      <h3 class="text-xl font-bold text-red-600 mb-4">Delete Account</h3>
+      <p class="text-gray-700 mb-4">This action <span class="font-bold">cannot be undone</span>. All your data, messages, and files will be permanently deleted.</p>
+      <p class="text-gray-700 mb-4">To confirm, please type "DELETE" in the field below:</p>
+      
+      <input 
+        type="text" 
+        [(ngModel)]="deleteConfirmText" 
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+        placeholder="Type DELETE to confirm"
+      />
+      
+      <div class="flex justify-end gap-3">
+        <button 
+          (click)="showDeleteConfirmDialog.set(false)" 
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+        >
+          Cancel
+        </button>
+        <button 
+          (click)="confirmDeleteAccount()" 
+          [disabled]="deleteConfirmText !== 'DELETE' || deleting()"
+          class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors disabled:opacity-50"
+        >
+          {{ deleting() ? 'Deleting...' : 'Delete Account' }}
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}

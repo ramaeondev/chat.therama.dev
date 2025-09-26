@@ -1,0 +1,92 @@
+<header class="flex flex-wrap items-center justify-between px-4 py-3 bg-white shadow relative z-10">
+    <div class="flex items-center gap-3">
+        <button class="md:hidden" (click)="onToggleSidebar()">
+            @if (!showSidebar) {
+                <span>☰</span>
+            }
+            @if (showSidebar) {
+                <span>✕</span>
+            }
+        </button>
+        <app-logo></app-logo>
+        <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border"
+            [class.bg-green-100]="realtimeConnected" [class.text-green-700]="realtimeConnected"
+            [class.bg-gray-100]="!realtimeConnected" [class.text-gray-600]="!realtimeConnected">
+            {{ realtimeConnected ? 'Realtime: connected' : 'Realtime: offline' }}
+        </span>
+    </div>
+    <div class="flex items-center gap-3 text-sm">
+        <!-- Admin Dashboard Button (only show for admins) -->
+        @if (isAdmin) {
+            <button (click)="toggleAdminDashboard()"
+                class="p-2 text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-full transition-colors"
+                title="Admin Dashboard">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                        clip-rule="evenodd" />
+                </svg>
+            </button>
+        }
+
+        <!-- Notification Toggle -->
+        <app-notification-toggle></app-notification-toggle>
+
+        <!-- Profile Dropdown -->
+        <div class="relative">
+            <!-- Avatar button -->
+            <button #profileMenuButton type="button" (click)="toggleMenu($event)" class="flex items-center gap-2 focus:outline-none">
+                <app-user-avatar [src]="profileAvatarUrl || ''" [name]="profileName || ''" [userId]="userId" [size]="36"
+                    alt="me"></app-user-avatar>
+            </button>
+
+            <!-- Dropdown menu -->
+            @if (menuVisible) {
+                <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50 profile-menu"
+                    (click)="$event.stopPropagation()">
+                    <!-- Menu items -->
+                    <button (click)="openProfile()" 
+                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                        My profile
+                    </button>
+                    <button (click)="openWhatsNew()" 
+                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                        What's new
+                    </button>
+                    <div class="border-t border-gray-100 my-1"></div>
+                    <button (click)="logout()" 
+                            [disabled]="loggingOut"
+                            class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 disabled:opacity-50">
+                        {{ loggingOut ? 'Logging out...' : 'Logout' }}
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Profile Dialog -->
+    @if (showProfileDialog()) {
+        <app-profile-dialog
+            [profileName]="profileName || ''"
+            [profileAvatarUrl]="profileAvatarUrl || ''"
+            (close)="closeDialogs()"
+            (save)="onSaveProfile($event)"
+            (removeAvatar)="onRemoveAvatar()"
+            (deleteAccount)="onDeleteAccount()"
+            class="fixed inset-0 z-20"
+        ></app-profile-dialog>
+    }
+
+    <!-- What's New Dialog -->
+    @if (showWhatsNewDialog()) {
+        <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-20 p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-3 sm:p-5 max-h-[90vh] sm:max-h-[80vh] overflow-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">What's new</h3>
+                    <button class="text-gray-500 p-2" (click)="closeDialogs()">✕</button>
+                </div>
+                <pre class="whitespace-pre-wrap text-sm text-gray-800">{{ changelog() }}</pre>
+            </div>
+        </div>
+    }
+</header>
