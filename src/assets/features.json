@@ -1,7 +1,7 @@
 {
   "application": {
     "name": "QuickChat",
-    "version": "3.2.0",
+    "version": "3.4.0",
     "description": "Modern real-time chat application built with Angular and Supabase",
     "tagline": "Connect instantly, chat seamlessly",
     "url": "https://chat.therama.dev"
@@ -129,6 +129,11 @@
         "icon": "🎨",
         "items": [
           {
+            "name": "Enhanced User Profile",
+            "description": "Redesigned profile dialog with additional user information",
+            "status": "✅ Implemented in v3.4.0"
+          },
+          {
             "name": "Responsive Design",
             "description": "Optimized for desktop, tablet, and mobile devices",
             "status": "✅ Implemented"
@@ -189,6 +194,17 @@
       }
     },
     "recentlyAdded": {
+      "v3.4.0": {
+        "title": "Enhanced User Profile",
+        "description": "Redesigned profile interface with additional user information and improved UX",
+        "features": [
+          "Email display in user profile",
+          "Last sign-in timestamp with proper formatting",
+          "Member since date display",
+          "Improved layout and organization"
+        ],
+        "date": "2025-09-27"
+      },
       "v3.2.0": {
         "title": "Latest Release - Security & UX Enhancements",
         "description": "Major security improvements and user experience enhancements",
