@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [3.4.0] - 2025-09-27
+
+### Added
+- **Enhanced User Profile**:
+  - Added email display in user profile
+  - Included last sign-in timestamp with proper formatting
+  - Added member since date to show account creation date
+  - Improved layout and organization of profile information
+
+### Changed
+- **Direct Data Fetching**:
+  - Profile dialog now fetches user data directly from Supabase
+  - Removed prop drilling through multiple components
+  - Improved component independence and reusability
+
+### Fixed
+- **Bug Fixes**:
+  - Fixed DatePipe injection issues in Dashboard component
+  - Resolved template binding issues in profile dialog
+  - Fixed duplicate field display in profile view
+  - Improved error handling for data fetching
+
+### Technical
+- Refactored ProfileDialogComponent to use Angular signals
+- Updated component templates to use modern Angular syntax
+- Improved error handling and loading states
+
 ## [3.3.0] - 2025-09-26
 
 ### Added
