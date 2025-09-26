@@ -31,7 +31,7 @@ export class Login implements OnDestroy {
   constructor(private supabase: SupabaseService, private fb: FormBuilder) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      otp: ['', []],
+      otp: ['', [Validators.pattern(/^\d{6}$/)]],
     });
   }
 

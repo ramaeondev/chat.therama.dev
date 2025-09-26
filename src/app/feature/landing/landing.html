@@ -20,92 +20,156 @@
   </div>
 </div>
   <!-- Navigation -->
-  <nav class="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 sticky top-0 z-50">
+  <nav class="bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200/50 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center py-4">
         <div class="flex items-center space-x-3">
-          <app-logo></app-logo>
+          <app-logo class="scale-90"></app-logo>
         </div>
         <div class="flex items-center space-x-4">
-          <a href="/signin" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Sign In</a>
-          <a href="/signup" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+          <button (click)="navigateToSignin()" class="text-gray-600 hover:text-gray-900 font-medium transition-all duration-200 px-4 py-2 rounded-lg hover:bg-gray-50">
+            Sign In
+          </button>
+          <button (click)="navigateToSignup()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
             Get Started
-          </a>
+          </button>
         </div>
       </div>
     </div>
   </nav>
 
   <!-- Hero Section -->
-  <section class="relative py-20 lg:py-32 overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
+  <section class="relative py-24 lg:py-32 overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5"></div>
+    <div class="absolute top-0 left-0 w-full h-full">
+      <div class="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+      <div class="absolute top-40 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-1000"></div>
+      <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-500"></div>
+    </div>
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center">
-        <h1 class="text-5xl lg:text-7xl font-bold text-gray-900 mb-6">
+        <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-8">
+          <span class="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
+          Version {{ app?.version }} - Latest Release
+        </div>
+        <h1 class="text-6xl lg:text-8xl font-bold text-gray-900 mb-8 leading-tight">
           Connect
-          <span class="gradient-text-instantly" data-text="Instantly">Instantly</span>
+          <span class="block">
+            Instantly
+          </span>
         </h1>
-        <p class="text-xl lg:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+        <p class="text-xl lg:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
           Experience the future of real-time communication with QuickChat.
-          Secure, fast, and beautifully designed for modern teams.
+          <span class="font-semibold text-gray-800">Secure, lightning-fast, and beautifully designed</span> for modern teams and individuals.
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/signup" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
-            Start Chatting Now
-          </a>
-          <a href="/signin" class="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl text-lg font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
-            Sign In
-          </a>
+        <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          <button (click)="navigateToSignup()" class="group bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-5 rounded-2xl text-xl font-bold hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl">
+            <span class="flex items-center gap-3">
+              Start Chatting Now
+              <svg class="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+              </svg>
+            </span>
+          </button>
+          <button (click)="navigateToSignin()" class="border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-2xl text-xl font-semibold hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 transition-all duration-300 group">
+            <span class="flex items-center gap-3">
+              Sign In
+              <svg class="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+              </svg>
+            </span>
+          </button>
+        </div>
+        <div class="mt-16 flex justify-center">
+          <div class="flex items-center gap-8 text-sm text-gray-500">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Free to use
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              No setup required
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Secure & private
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Features Grid -->
-  <section class="py-20 bg-white/50">
+  <section class="py-24 bg-white/70 backdrop-blur-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Why Choose QuickChat?</h2>
-        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+      <div class="text-center mb-20">
+        <h2 class="text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+          Why Choose
+          <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">QuickChat?</span>
+        </h2>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          Discover the powerful features that make QuickChat the perfect choice for modern communication
+        </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" *ngIf="!loading && !error">
-        <div *ngFor="let category of featureCategories" class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-100">
-          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mb-6">
-            <span class="text-2xl">{{ category.icon }}</span>
+        <div *ngFor="let category of featureCategories" class="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-blue-200 hover:-translate-y-2">
+          <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+            <span class="text-3xl">{{ category.icon }}</span>
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-4">{{ category.title }}</h3>
-          <p class="text-gray-600 mb-6">{{ category.description }}</p>
-          <ul class="space-y-3">
-            <li *ngFor="let item of category.items.slice(0, 3)" class="flex items-start space-x-3">
-              <div class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-              <span class="text-gray-700">{{ item.name }}</span>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-blue-700 transition-colors">{{ category.title }}</h3>
+          <p class="text-gray-600 mb-8 leading-relaxed">{{ category.description }}</p>
+          <ul class="space-y-4">
+            <li *ngFor="let item of category.items.slice(0, 3)" class="flex items-start space-x-4">
+              <div class="w-3 h-3 bg-gradient-to-r from-green-400 to-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+              <span class="text-gray-700 font-medium">{{ item.name }}</span>
             </li>
           </ul>
+          <div class="mt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <button class="text-blue-600 font-semibold hover:text-blue-700 transition-colors">
+              Learn more →
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Stats Section -->
-  <section class="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center" *ngIf="stats">
-        <div class="text-white">
-          <div class="text-4xl lg:text-5xl font-bold mb-2">{{ stats.totalFeatures }}</div>
-          <div class="text-blue-100">Features</div>
+  <section class="py-24 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 relative overflow-hidden">
+    <div class="absolute inset-0 bg-black/10"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">QuickChat by Numbers</h2>
+        <p class="text-xl text-indigo-100">Growing stronger every day</p>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-12" *ngIf="stats">
+        <div class="text-center group">
+          <div class="text-5xl lg:text-6xl font-bold text-white mb-3 group-hover:scale-110 transition-transform duration-300">{{ stats.totalFeatures }}</div>
+          <div class="text-indigo-200 font-semibold text-lg">Total Features</div>
+          <div class="w-12 h-1 bg-white/30 rounded-full mx-auto mt-4 group-hover:bg-white transition-colors duration-300"></div>
         </div>
-        <div class="text-white">
-          <div class="text-4xl lg:text-5xl font-bold mb-2">{{ stats.implementedFeatures }}</div>
-          <div class="text-blue-100">Implemented</div>
+        <div class="text-center group">
+          <div class="text-5xl lg:text-6xl font-bold text-white mb-3 group-hover:scale-110 transition-transform duration-300">{{ stats.implementedFeatures }}</div>
+          <div class="text-indigo-200 font-semibold text-lg">Implemented</div>
+          <div class="w-12 h-1 bg-white/30 rounded-full mx-auto mt-4 group-hover:bg-white transition-colors duration-300"></div>
         </div>
-        <div class="text-white">
-          <div class="text-4xl lg:text-5xl font-bold mb-2">{{ stats.plannedFeatures }}</div>
-          <div class="text-blue-100">Planned</div>
+        <div class="text-center group">
+          <div class="text-5xl lg:text-6xl font-bold text-white mb-3 group-hover:scale-110 transition-transform duration-300">{{ stats.plannedFeatures }}</div>
+          <div class="text-indigo-200 font-semibold text-lg">In Development</div>
+          <div class="w-12 h-1 bg-white/30 rounded-full mx-auto mt-4 group-hover:bg-white transition-colors duration-300"></div>
         </div>
-        <div class="text-white">
-          <div class="text-4xl lg:text-5xl font-bold mb-2">{{ stats.backlogFeatures }}</div>
-          <div class="text-blue-100">In Backlog</div>
+        <div class="text-center group">
+          <div class="text-5xl lg:text-6xl font-bold text-white mb-3 group-hover:scale-110 transition-transform duration-300">{{ stats.backlogFeatures }}</div>
+          <div class="text-indigo-200 font-semibold text-lg">Planned</div>
+          <div class="w-12 h-1 bg-white/30 rounded-full mx-auto mt-4 group-hover:bg-white transition-colors duration-300"></div>
         </div>
       </div>
     </div>
@@ -183,15 +247,36 @@
   </section>
 
   <!-- CTA Section -->
-  <section class="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-    <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-      <h2 class="text-4xl lg:text-5xl font-bold text-white mb-6">Ready to Get Started?</h2>
-      <p class="text-xl text-blue-100 mb-8">
-        Join thousands of users already using QuickChat for their real-time communication needs.
+  <section class="py-24 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative overflow-hidden">
+    <div class="absolute inset-0 bg-black/20"></div>
+    <div class="absolute top-0 left-0 w-full h-full">
+      <div class="absolute top-10 left-20 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-10 right-20 w-60 h-60 bg-white/5 rounded-full blur-3xl"></div>
+    </div>
+    <div class="relative max-w-5xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+      <div class="inline-flex items-center px-6 py-3 rounded-full bg-white/20 backdrop-blur-sm text-white text-lg font-medium mb-8">
+        <span class="w-3 h-3 bg-green-400 rounded-full mr-3 animate-pulse"></span>
+        Ready to transform your communication?
+      </div>
+      <h2 class="text-5xl lg:text-6xl font-bold text-white mb-8 leading-tight">
+        Join the
+        <span class="block">QuickChat Revolution</span>
+      </h2>
+      <p class="text-xl lg:text-2xl text-blue-100 mb-12 leading-relaxed max-w-3xl mx-auto">
+        Experience seamless real-time messaging with enterprise-grade security.
+        <span class="font-semibold text-white">Join thousands of users</span> who have already made the switch.
       </p>
-      <a href="/signup" class="bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-gray-50 transform hover:scale-105 transition-all duration-200 shadow-lg">
-        Create Your Account
-      </a>
+      <button (click)="navigateToSignup()" class="bg-white text-blue-600 px-12 py-6 rounded-2xl text-2xl font-bold hover:bg-gray-50 transform hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-3xl group">
+        <span class="flex items-center gap-4">
+          Create Your Account
+          <svg class="w-8 h-8 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+          </svg>
+        </span>
+      </button>
+      <p class="text-blue-200 text-sm mt-6">
+        Free forever • No credit card required • Setup in seconds
+      </p>
     </div>
   </section>
 
