@@ -1,5 +1,5 @@
 import { Component, OnDestroy, WritableSignal, inject, ElementRef, ViewChild, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, Validators, NonNullableFormBuilder, FormGroup } from '@angular/forms';
 import { NotificationService } from '../../core/services/notification.service';
 import { SupabaseService } from '../../core/supabase.service';
@@ -8,10 +8,7 @@ import { UserMetadata } from '@supabase/supabase-js';
 import { EmojiPickerComponent } from '../../shared/emoji-picker/emoji-picker';
 import { HttpClient } from '@angular/common/http';
 import { UserAvatarComponent } from '../../shared/user-avatar/user-avatar';
-import { ProfileDialogComponent } from '../../shared/profile-dialog/profile-dialog';
-import { LogoComponent } from '../../shared/logo/logo';
-import { NotificationToggleComponent } from '../../shared/components/notification-toggle/notification-toggle.component';
-import { ClickOutsideDirective } from '../../shared/directives/click-outside.directive';
+import { HeaderComponent } from '../../shared/components/header/header.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,18 +18,18 @@ import { ClickOutsideDirective } from '../../shared/directives/click-outside.dir
     ReactiveFormsModule, 
     EmojiPickerComponent, 
     UserAvatarComponent,
-    ProfileDialogComponent,
-    LogoComponent,
-    NotificationToggleComponent,
-    ClickOutsideDirective
+    HeaderComponent,
+    DatePipe
   ],
   templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.scss']
+  styleUrls: ['./dashboard.scss'],
+  providers: [DatePipe]
 })
 export class Dashboard implements OnDestroy {
   // Top bar state
   userEmail = signal<string>('');
   loggingOut = signal<boolean>(false);
+  isAdmin = signal<boolean>(false);
 
   // Friends and chat state
   friends = signal<Array<{
@@ -75,10 +72,8 @@ export class Dashboard implements OnDestroy {
   dragging = signal<boolean>(false);
   uploadProgress = signal<number>(0); // 0..100
 
-  // Topbar profile/menu/dialog state
+  // Topbar profile/menu state
   showMenu = signal<boolean>(false);
-  showProfileDialog = signal<boolean>(false);
-  showWhatsNewDialog = signal<boolean>(false);
   profileName = signal<string>('');
   profileAvatarUrl = signal<string | null>(null);
   changelog = signal<string>('');
@@ -137,23 +132,6 @@ export class Dashboard implements OnDestroy {
       this.showMenu.set(false);
     }
   }
-
-  
-  openProfile() {
-    this.showMenu.set(false);
-    this.showProfileDialog.set(true);
-  }
-  
-  openWhatsNew() {
-    this.showMenu.set(false);
-    this.showWhatsNewDialog.set(true);
-    this.loadChangelog();
-  }
-  
-  closeDialogs() {
-    this.showProfileDialog.set(false);
-    this.showWhatsNewDialog.set(false);
-  }
   
   async saveProfile(profileData: { name: string; avatarFile?: File }) {
     console.log('Saving profile with data:', profileData);
@@ -177,11 +155,10 @@ export class Dashboard implements OnDestroy {
         console.log('Upload result:', res);
         this.profileAvatarUrl.set(res.url);
       }
-      
-      this.showProfileDialog.set(false);
     } catch (error) {
       console.error('Error saving profile:', error);
       alert('Failed to save profile. Please try again.');
+      throw error; // Re-throw to allow the header to handle the error
     }
   }
   
@@ -192,6 +169,7 @@ export class Dashboard implements OnDestroy {
     } catch (error) {
       console.error('Error removing profile picture:', error);
       alert('Failed to remove profile picture. Please try again.');
+      throw error; // Re-throw to allow the header to handle the error
     }
   }
 
@@ -217,14 +195,7 @@ export class Dashboard implements OnDestroy {
     } catch (error) {
       console.error('Error deleting account:', error);
       alert('Failed to delete account. Please try again.');
-    }
-  }
-  async loadChangelog() {
-    try {
-      const text = await this.http.get('assets/CHANGELOG.md', { responseType: 'text' }).toPromise();
-      this.changelog.set(text || '');
-    } catch {
-      this.changelog.set('No release notes available.');
+      throw error; // Re-throw to allow the header to handle the error
     }
   }
   onProfileNameInput(event: Event) {
@@ -434,7 +405,7 @@ export class Dashboard implements OnDestroy {
 
   async initialize() {
     await this.supabase.upsertProfileFromAuth();
-    await this.loadMyProfile();
+    await this.ngOnInit();
     await this.loadFriends();
     const first = this.friends()[0];
     if (first) {
@@ -446,11 +417,25 @@ export class Dashboard implements OnDestroy {
     this.startSignedUrlRefresh();
   }
 
-  private async loadMyProfile() {
-    const me = await this.supabase.getMyProfile();
-    if (me) {
-      this.profileName.set((me.name || '').trim());
-      this.profileAvatarUrl.set(me.avatar_url);
+  private async ngOnInit() {
+    try {
+      // Get user profile
+      const profile = await this.supabase.getMyProfile();
+      console.log(profile);
+      if (profile) {
+        this.profileName.set(profile.name || '');
+        this.profileAvatarUrl.set(profile.avatar_url || '');
+        this.isAdmin.set(!!profile.is_admin);
+        
+        // Log admin status for debugging
+        if (this.isAdmin()) {
+          console.log('User is admin');
+        } else {
+          console.log('User is not admin');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
     }
   }
 
@@ -661,6 +646,11 @@ export class Dashboard implements OnDestroy {
         this.realtimeConnected.set(true);
       }
     );
+  }
+
+  // Navigate to admin dashboard
+  navigateToAdmin() {
+    this.router.navigate(['/admin']);
   }
 
   ngOnDestroy(): void {

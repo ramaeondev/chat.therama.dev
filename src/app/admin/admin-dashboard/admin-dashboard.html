@@ -1,0 +1,38 @@
+<div class="flex flex-col h-screen bg-gray-100 overflow-hidden">
+  <!-- Header -->
+  <app-header 
+    [realtimeConnected]="realtimeConnected()"
+    [isAdmin]="isAdmin()"
+    [profileAvatarUrl]="profileAvatarUrl()"
+    [profileName]="profileName()"
+    [userId]="userId()"
+    [showSidebar]="showSidebar()"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (navigateToAdminEvent)="navigateToAdmin()"
+    (toggleMenuEvent)="toggleMenu($event)"
+    (profileClickOutsideEvent)="onProfileClickOutside($event)"
+    (logoutEvent)="logout()"
+  ></app-header>
+
+  <!-- Main Content -->
+  <div class="flex-1 overflow-auto">
+    <main class="py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div class="px-4 py-5 sm:px-6">
+            <h2 class="text-xl font-semibold text-gray-900">Admin Dashboard</h2>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+              Admin dashboard for managing the application
+            </p>
+          </div>
+          <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+            <!-- Add your admin components here -->
+            <div class="p-6">
+              <p class="text-gray-600">Admin features will be added here.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
