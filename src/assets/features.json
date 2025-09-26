@@ -1,7 +1,7 @@
 {
   "application": {
     "name": "QuickChat",
-    "version": "2.3.1",
+    "version": "3.2.0",
     "description": "Modern real-time chat application built with Angular and Supabase",
     "tagline": "Connect instantly, chat seamlessly",
     "url": "https://chat.therama.dev"
@@ -24,8 +24,8 @@
             "status": "✅ Implemented"
           },
           {
-            "name": "Automatic Profile Creation",
-            "description": "Profile automatically created from authentication data",
+            "name": "Account Deletion",
+            "description": "Complete account removal with secure data cleanup and confirmation flow",
             "status": "✅ Implemented"
           }
         ]
@@ -112,8 +112,13 @@
             "status": "✅ Implemented"
           },
           {
-            "name": "Secure Storage",
-            "description": "Private Supabase Storage with signed URLs",
+            "name": "Secure File Storage",
+            "description": "Enhanced file storage security with improved access control policies",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Conversation-based Access",
+            "description": "File access restrictions ensure only conversation participants can access shared files",
             "status": "✅ Implemented"
           }
         ]
@@ -139,9 +144,19 @@
             "status": "✅ Implemented"
           },
           {
-            "name": "Consistent Branding",
-            "description": "Reusable logo component across all pages",
-            "status": "✅ Implemented"
+            "name": "Profile Dialog Improvements",
+            "description": "Fixed save button behavior and improved error handling",
+            "status": "✅ Fixed"
+          },
+          {
+            "name": "Dashboard Responsiveness",
+            "description": "Fixed overflow issues and improved mobile layout",
+            "status": "✅ Fixed"
+          },
+          {
+            "name": "UI/UX Enhancements",
+            "description": "Removed footer, improved What's New dialog, enhanced button layouts",
+            "status": "✅ Improved"
           }
         ]
       },
@@ -174,7 +189,56 @@
       }
     },
     "recentlyAdded": {
-      "v2.3.1": {
+      "v3.2.0": {
+        "title": "Latest Release - Security & UX Enhancements",
+        "description": "Major security improvements and user experience enhancements",
+        "icon": "🛡️",
+        "items": [
+          {
+            "name": "Account Deletion System",
+            "description": "Comprehensive account deletion with secure data cleanup and confirmation flow",
+            "status": "✅ Added"
+          },
+          {
+            "name": "Authentication Guard",
+            "description": "Route protection ensuring only authenticated users access dashboard",
+            "status": "✅ Added"
+          },
+          {
+            "name": "Enhanced Security",
+            "description": "Improved file storage security and conversation-based access control",
+            "status": "✅ Added"
+          },
+          {
+            "name": "Mobile Responsiveness",
+            "description": "Better mobile support with flexible layouts and proper overflow handling",
+            "status": "✅ Added"
+          },
+          {
+            "name": "Profile Dialog Fixes",
+            "description": "Fixed save button behavior and improved error handling throughout",
+            "status": "✅ Fixed"
+          }
+        ]
+      },
+      "v3.1.0": {
+        "title": "Security Enhancements",
+        "description": "Enhanced file storage security and access control",
+        "icon": "🔒",
+        "items": [
+          {
+            "name": "File Storage Security",
+            "description": "Improved access control policies and storage path structure",
+            "status": "✅ Added"
+          },
+          {
+            "name": "Conversation Access Control",
+            "description": "File sharing permissions ensure only participants can access shared files",
+            "status": "✅ Added"
+          }
+        ]
+      },
+      "v3.0.0": {
         "title": "Latest Release - Profile & Branding Enhancements",
         "description": "Recent improvements and fixes",
         "icon": "✨",
@@ -298,8 +362,8 @@
           },
           {
             "name": "Account Deletion",
-            "description": "Complete account removal with data cleanup",
-            "status": "📋 Backlog"
+            "description": "Complete account removal with data cleanup (IMPLEMENTED)",
+            "status": "✅ Completed"
           },
           {
             "name": "Advanced Search",
@@ -333,39 +397,25 @@
           }
         ]
       }
+    },
+    "techStack": {
+      "frontend": ["Angular 20", "TypeScript", "Tailwind CSS", "RxJS"],
+      "backend": ["Supabase (Auth, Database, Realtime, Storage)", "PostgreSQL"],
+      "deployment": ["Docker", "Nginx", "AWS EC2", "ECR Public", "GitHub Actions CI/CD"],
+      "security": [
+        "HTTPS with SSL certificates",
+        "Row Level Security (RLS)",
+        "Private Storage with signed URLs",
+        "OTP-based authentication"
+      ]
+    },
+    "stats": {
+      "currentVersion": "3.2.0",
+      "lastUpdated": "2025-09-26",
+      "totalFeatures": 32,
+      "implementedFeatures": 25,
+      "plannedFeatures": 4,
+      "backlogFeatures": 3
     }
-  },
-  "techStack": {
-    "frontend": [
-      "Angular 20",
-      "TypeScript",
-      "Tailwind CSS",
-      "RxJS"
-    ],
-    "backend": [
-      "Supabase (Auth, Database, Realtime, Storage)",
-      "PostgreSQL"
-    ],
-    "deployment": [
-      "Docker",
-      "Nginx",
-      "AWS EC2",
-      "ECR Public",
-      "GitHub Actions CI/CD"
-    ],
-    "security": [
-      "HTTPS with SSL certificates",
-      "Row Level Security (RLS)",
-      "Private Storage with signed URLs",
-      "OTP-based authentication"
-    ]
-  },
-  "stats": {
-    "currentVersion": "2.3.1",
-    "lastUpdated": "2025-09-23",
-    "totalFeatures": 25,
-    "implementedFeatures": 18,
-    "plannedFeatures": 7,
-    "backlogFeatures": 8
   }
 }

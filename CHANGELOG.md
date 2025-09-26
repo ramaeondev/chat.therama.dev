@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [3.3.0] - 2025-09-26
+
+### Added
+- **Modern Authentication UI**:
+  - Complete redesign of signup and signin components with glassmorphism effects
+  - Enhanced form validation with real-time feedback and better error handling
+  - Improved OTP input with monospace font and character spacing for better UX
+  - Dynamic button spacing that adapts based on form state (OTP visible/hidden)
+
+- **Enhanced Landing Page**:
+  - Redesigned hero section with animated background elements and gradient text effects
+  - Added version badge with pulse animation in hero section
+  - Enhanced features grid with hover animations and improved card design
+  - Modernized stats section with gradient backgrounds and interactive elements
+  - Improved call-to-action section with compelling copy and enhanced styling
+  - Added trust indicators (Free to use, No setup required, Secure & private)
+
+- **Visual Design System**:
+  - Consistent color schemes across components (blue/purple for signup, green/teal for signin)
+  - Modern glassmorphism effects with backdrop blur throughout the application
+  - Smooth animations and transitions for better user experience
+  - Professional gradient backgrounds and enhanced shadow effects
+  - Improved accessibility with proper contrast and focus states
+
+### Changed
+- **Features Documentation**:
+  - Updated features.json to version 3.2.0 with comprehensive feature tracking
+  - Added new features including Account Deletion, Authentication Guard, and Enhanced Security
+  - Updated statistics to reflect 32 total features with 25 implemented
+  - Enhanced recently added features section with v3.2.0 and v3.1.0 releases
+
+- **Component Architecture**:
+  - Improved responsive design across all authentication and landing page components
+  - Enhanced mobile support with better touch targets and spacing
+  - Better component organization and consistent styling patterns
+  - Optimized animations and transitions for smoother user interactions
+
+### Fixed
+- **UI/UX Improvements**:
+  - Fixed button spacing issues in authentication flows
+  - Improved visual hierarchy and spacing throughout the application
+  - Enhanced loading states and user feedback mechanisms
+  - Better error message presentation with consistent styling
+
+- **Responsive Design**:
+  - Fixed layout issues on mobile devices
+  - Improved component spacing and alignment across different screen sizes
+  - Enhanced touch-friendly interface elements
+
 ## [3.2.0] - 2025-09-26
 
 ### Added
