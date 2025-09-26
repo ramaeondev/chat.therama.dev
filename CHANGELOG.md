@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [3.4.2] - 2025-09-27
+
+### Added
+- **Improved Empty States**:
+  - Added friendly empty state when no friends are available
+  - Added clear messaging when no conversation is selected
+  - Included helpful icons and call-to-action buttons
+
+### Changed
+- **UI/UX Improvements**:
+  - Disabled message input and buttons when no user is selected
+  - Enhanced visual feedback for disabled states
+  - Improved button and input field states for better usability
+  - Updated placeholder text to guide users on next steps
+
+### Fixed
+- **Accessibility**:
+  - Added proper disabled states to form controls
+  - Improved focus states for better keyboard navigation
+  - Enhanced contrast for better readability
+
 ## [3.4.1] - 2025-09-27
 
 ### Changed

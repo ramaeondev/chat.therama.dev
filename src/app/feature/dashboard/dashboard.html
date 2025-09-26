@@ -44,47 +44,73 @@
         </button>
         <div class="text-xs text-red-600" *ngIf="searchError()">{{ searchError() }}</div>
       </div>
-      <ul>
-        <li *ngFor="let f of friends()" (click)="selectFriend(f.id)"
-            class="px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center justify-between gap-3"
-            [class.bg-blue-50]="selectedFriendId() === f.id">
-          <div class="flex items-center gap-2 min-w-0 flex-1">
-            <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="28"></app-user-avatar>
-            <div class="min-w-0">
-              <div class="truncate text-sm">{{ f.name || f.email }}</div>
-              <div class="text-[11px] text-gray-500 truncate">
-                <ng-container *ngIf="f.last_message_text; else noMsg">
-                  <span class="opacity-70" *ngIf="f.last_message_from_me">You: </span>{{ f.last_message_text }}
-                </ng-container>
-                <ng-template #noMsg>
-                  {{ f.email }}
-                </ng-template>
+      <ng-container *ngIf="friends().length > 0; else noFriends">
+        <ul>
+          <li *ngFor="let f of friends()" (click)="selectFriend(f.id)"
+              class="px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center justify-between gap-3"
+              [class.bg-blue-50]="selectedFriendId() === f.id">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="28"></app-user-avatar>
+              <div class="min-w-0">
+                <div class="truncate text-sm">{{ f.name || f.email }}</div>
+                <div class="text-[11px] text-gray-500 truncate">
+                  <ng-container *ngIf="f.last_message_text; else noMsg">
+                    <span class="opacity-70" *ngIf="f.last_message_from_me">You: </span>{{ f.last_message_text }}
+                  </ng-container>
+                  <ng-template #noMsg>
+                    {{ f.email }}
+                  </ng-template>
+                </div>
               </div>
             </div>
+            <div class="flex items-center gap-2">
+              <div class="text-[10px] text-gray-400" *ngIf="f.last_message_at as t">{{ t | date:'shortTime' }}</div>
+              <span class="w-2 h-2 rounded-full"
+                    [class.bg-green-500]="onlineIds().includes(f.id)"
+                    [class.bg-gray-300]="!onlineIds().includes(f.id)"></span>
+            </div>
+          </li>
+        </ul>
+      </ng-container>
+      <ng-template #noFriends>
+        <div class="p-6 text-center text-gray-500">
+          <div class="mx-auto w-16 h-16 mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0111.357-3m1.764-2.078a4 4 0 01-1.121 1.121M13 7a4 4 0 11-8 0 4 4 0 018 0zm6 10a4 4 0 11-8 0 4 4 0 018 0zm-6-2a4 4 0 100 8 4 4 0 000-8z" />
+            </svg>
           </div>
-          <div class="flex items-center gap-2">
-            <div class="text-[10px] text-gray-400" *ngIf="f.last_message_at as t">{{ t | date:'shortTime' }}</div>
-            <span class="w-2 h-2 rounded-full"
-                  [class.bg-green-500]="onlineIds().includes(f.id)"
-                  [class.bg-gray-300]="!onlineIds().includes(f.id)"></span>
-          </div>
-        </li>
-      </ul>
+          <h3 class="text-lg font-medium text-gray-700 mb-1">No friends yet</h3>
+          <p class="mb-4 text-sm">Start a new conversation by searching for a user's email above.</p>
+        </div>
+      </ng-template>
     </aside>
 
     <!-- Chat area -->
     <main class="flex-1 flex flex-col h-full overflow-hidden">
       <!-- Chat header -->
       <div class="px-4 py-3 bg-white border-b flex items-center gap-3">
-        <ng-container *ngIf="getFriend(selectedFriendId()) as f">
-          <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="32"></app-user-avatar>
+        <ng-container *ngIf="selectedFriendId() && getFriend(selectedFriendId()); else noFriendSelected">
+          <ng-container *ngIf="getFriend(selectedFriendId()) as f">
+            <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="32"></app-user-avatar>
+          </ng-container>
+          <div class="flex items-center gap-2">
+            <h2 class="font-medium text-gray-800">{{ friendName(selectedFriendId()) }}</h2>
+            <span class="w-2 h-2 rounded-full"
+                  [class.bg-green-500]="onlineIds().includes(selectedFriendId() || '')"
+                  [class.bg-gray-300]="!onlineIds().includes(selectedFriendId() || '')"></span>
+          </div>
         </ng-container>
-        <div class="flex items-center gap-2">
-          <h2 class="font-medium text-gray-800">{{ friendName(selectedFriendId()) }}</h2>
-          <span class="w-2 h-2 rounded-full"
-                [class.bg-green-500]="onlineIds().includes(selectedFriendId() || '')"
-                [class.bg-gray-300]="!onlineIds().includes(selectedFriendId() || '')"></span>
-        </div>
+        <ng-template #noFriendSelected>
+          <div class="flex flex-col items-center justify-center w-full py-8">
+            <div class="w-12 h-12 mb-3 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-700">No conversation selected</h3>
+            <p class="text-sm text-gray-500">Select a chat or start a new conversation</p>
+          </div>
+        </ng-template>
       </div>
 
       <!-- Messages list -->
@@ -119,24 +145,54 @@
       <!-- Composer with Drop Zone -->
       <form [formGroup]="messageForm" (ngSubmit)="sendMessage()"
             class="p-2 sm:p-3 bg-white border-t space-y-2 sticky bottom-0"
-            (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+            [class.opacity-75]="!selectedFriendId()"
+            (dragover)="$event.preventDefault(); onDragOver($event)" 
+            (dragleave)="onDragLeave($event)" 
+            (drop)="onDrop($event)">
         <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 border-2 border-dashed rounded p-2"
-             [class.border-blue-400]="dragging()" [class.border-gray-200]="!dragging()"
-             [class.bg-blue-50]="dragging()">
+             [class.border-blue-400]="dragging() && selectedFriendId()" 
+             [class.border-gray-200]="!dragging()"
+             [class.bg-blue-50]="dragging() && selectedFriendId()"
+             [class.bg-gray-50]="!selectedFriendId()">
           <div class="flex gap-2 w-full sm:w-auto">
-            <button type="button" (click)="showEmoji.set(!showEmoji())" class="px-2 py-2 rounded border text-sm">
+            <button type="button" 
+                    (click)="showEmoji.set(!showEmoji())" 
+                    class="px-2 py-2 rounded border text-sm"
+                    [class.opacity-50]="!selectedFriendId()"
+                    [disabled]="!selectedFriendId()">
               😊
             </button>
-            <label class="px-2 py-2 rounded border text-sm cursor-pointer">
+            <label class="px-2 py-2 rounded border text-sm"
+                   [class.cursor-pointer]="selectedFriendId()"
+                   [class.opacity-50]="!selectedFriendId()"
+                   [class.cursor-not-allowed]="!selectedFriendId()">
               📎
-              <input type="file" (change)="onFileSelected($event)" [disabled]="uploading()" class="hidden" [attr.accept]="ACCEPTED_MIME_LIST.join(',')" />
+              <input type="file" 
+                     (change)="onFileSelected($event)" 
+                     [disabled]="uploading() || !selectedFriendId()" 
+                     class="hidden" 
+                     [attr.accept]="ACCEPTED_MIME_LIST.join(',')" />
             </label>
             <span class="text-xs text-gray-500" *ngIf="uploading()">Uploading...</span>
           </div>
-          <input type="text" formControlName="text" placeholder="Type a message or caption"
-                 class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200 w-full sm:w-auto" />
-          <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 w-full sm:w-auto mt-2 sm:mt-0"
-                  [disabled]="messageForm.invalid">Send</button>
+          <input 
+            type="text" 
+            formControlName="text" 
+            [placeholder]="selectedFriendId() ? 'Type a message or caption' : 'Select a chat to start messaging'"
+            class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200 w-full sm:w-auto"
+            [class.bg-gray-50]="!selectedFriendId()"
+            [class.cursor-not-allowed]="!selectedFriendId()"
+            [disabled]="!selectedFriendId()" />
+          <button 
+            type="submit" 
+            class="px-4 py-2 rounded text-white w-full sm:w-auto mt-2 sm:mt-0"
+            [class.bg-blue-600]="selectedFriendId()"
+            [class.hover:bg-blue-700]="selectedFriendId()"
+            [class.bg-gray-400]="!selectedFriendId()"
+            [class.cursor-not-allowed]="!selectedFriendId()"
+            [disabled]="messageForm.invalid || !selectedFriendId()">
+            {{ selectedFriendId() ? 'Send' : 'Select a chat' }}
+          </button>
         </div>
         <!-- Drop hint -->
         <div *ngIf="dragging()" class="text-xs text-blue-700">Drop a file anywhere in this box to upload</div>
