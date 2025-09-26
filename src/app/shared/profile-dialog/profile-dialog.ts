@@ -12,8 +12,7 @@ import { SupabaseService } from '../../core/supabase.service';
     CommonModule, 
     FormsModule, 
     ImageCropperComponent, 
-    UserAvatarComponent,
-    DatePipe  
+    UserAvatarComponent
   ],
   templateUrl: './profile-dialog.html',
   styleUrl: './profile-dialog.scss'

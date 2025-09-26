@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, WritableSignal, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { SupabaseService } from '../../core/supabase.service';
 import { HeaderComponent } from '../../shared/components/header/header.component';
@@ -8,9 +8,10 @@ import { AuthSession, UserMetadata } from '@supabase/supabase-js';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, HeaderComponent],
+  imports: [CommonModule, RouterModule, HeaderComponent, DatePipe],
   templateUrl: './admin-dashboard.html',
-  styleUrls: ['./admin-dashboard.scss']
+  styleUrls: ['./admin-dashboard.scss'],
+  providers: [DatePipe]
 })
 export class AdminDashboardComponent implements OnDestroy {
   loading = signal(false);
@@ -70,10 +71,6 @@ export class AdminDashboardComponent implements OnDestroy {
     }
   }
 
-  // Navigation methods
-  navigateToAdmin() {
-    // Already on admin page
-  }
 
   // Menu methods
   toggleSidebar() {
@@ -90,20 +87,6 @@ export class AdminDashboardComponent implements OnDestroy {
     event.stopPropagation();
     // Handle menu toggle if needed
   }
-
-  // Auth methods
-  async logout() {
-    this.loading.set(true);
-    try {
-      await this.supabase.client.auth.signOut();
-      this.router.navigate(['/auth/signin']);
-    } catch (error) {
-      console.error('Error signing out:', error);
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
   // Clean up on destroy
   ngOnDestroy() {
     if (this._unsubPresence) {

@@ -134,29 +134,19 @@ export class Dashboard implements OnDestroy {
   }
   
   async saveProfile(profileData: { name: string; avatarFile?: File }) {
-    console.log('Saving profile with data:', profileData);
     try {
       // Update name if changed
       if (profileData.name !== this.profileName()) {
-        console.log('Updating profile name from:', this.profileName(), 'to:', profileData.name);
         await this.supabase.updateProfileName(profileData.name);
         this.profileName.set(profileData.name);
       }
       
       // Handle avatar upload if a new file is provided
       if (profileData.avatarFile) {
-        console.log('Uploading avatar file:', {
-          name: profileData.avatarFile.name,
-          type: profileData.avatarFile.type,
-          size: profileData.avatarFile.size,
-          sizeMB: (profileData.avatarFile.size / 1024 / 1024).toFixed(2)
-        });
         const res = await this.supabase.uploadAvatar(profileData.avatarFile, true);
-        console.log('Upload result:', res);
         this.profileAvatarUrl.set(res.url);
       }
     } catch (error) {
-      console.error('Error saving profile:', error);
       alert('Failed to save profile. Please try again.');
       throw error; // Re-throw to allow the header to handle the error
     }
@@ -167,7 +157,6 @@ export class Dashboard implements OnDestroy {
       await this.supabase.removeAvatar();
       this.profileAvatarUrl.set(null);
     } catch (error) {
-      console.error('Error removing profile picture:', error);
       alert('Failed to remove profile picture. Please try again.');
       throw error; // Re-throw to allow the header to handle the error
     }
@@ -193,7 +182,6 @@ export class Dashboard implements OnDestroy {
       await this.supabase.signOut();
       this.router.navigate(['/signin']);
     } catch (error) {
-      console.error('Error deleting account:', error);
       alert('Failed to delete account. Please try again.');
       throw error; // Re-throw to allow the header to handle the error
     }
@@ -265,9 +253,7 @@ export class Dashboard implements OnDestroy {
       this.messageForm.reset({ text: '' });
       await this.refreshFriendMeta(friendId);
     } catch (e) {
-      console.error('Failed to upload/send attachment', e);
       this.uploadError.set('Upload failed. Please try again.');
-      // Optional: surface to UI via a toast/snackbar
     } finally {
       this.uploading.set(false);
       this.uploadProgress.set(0);
@@ -303,7 +289,7 @@ export class Dashboard implements OnDestroy {
         return m;
       }));
     } catch (e) {
-      console.error('Failed to sign URL for attachment', e);
+      this.uploadError.set('Upload failed. Please try again.');
     }
   }
 
@@ -421,18 +407,10 @@ export class Dashboard implements OnDestroy {
     try {
       // Get user profile
       const profile = await this.supabase.getMyProfile();
-      console.log(profile);
       if (profile) {
         this.profileName.set(profile.name || '');
         this.profileAvatarUrl.set(profile.avatar_url || '');
         this.isAdmin.set(!!profile.is_admin);
-        
-        // Log admin status for debugging
-        if (this.isAdmin()) {
-          console.log('User is admin');
-        } else {
-          console.log('User is not admin');
-        }
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -498,16 +476,6 @@ export class Dashboard implements OnDestroy {
     this.messageForm.reset({ text: '' });
     // Update last message meta for friend and resort
     await this.refreshFriendMeta(friendId);
-  }
-
-  async logout() {
-    this.loggingOut.set(true);
-    try {
-      await this.supabase.signOut();
-      this.router.navigate(['/signin']);
-    } finally {
-      this.loggingOut.set(false);
-    }
   }
 
   subscribeToConversation(friendId: string) {
@@ -646,11 +614,6 @@ export class Dashboard implements OnDestroy {
         this.realtimeConnected.set(true);
       }
     );
-  }
-
-  // Navigate to admin dashboard
-  navigateToAdmin() {
-    this.router.navigate(['/admin']);
   }
 
   ngOnDestroy(): void {

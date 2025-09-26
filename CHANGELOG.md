@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [3.4.1] - 2025-09-27
+
+### Changed
+- **Header Component Refactor**:
+  - Decoupled header component from parent events
+  - Moved logout and profile management logic into the header component
+  - Improved admin dashboard navigation with toggle functionality
+  - Added proper error handling and user feedback with snackbar notifications
+
+### Fixed
+- **Admin Dashboard**:
+  - Fixed DatePipe provider error in admin dashboard
+  - Improved error handling for profile updates
+  - Removed console.log statements for cleaner production code
+
 ## [3.4.0] - 2025-09-27
 
 ### Added

@@ -30,9 +30,7 @@ export class HeaderComponent {
   @Input() showSidebar = false;
   
   @Output() toggleSidebarEvent = new EventEmitter<void>();
-  @Output() navigateToAdminEvent = new EventEmitter<void>();
   @Output() toggleMenuEvent = new EventEmitter<MouseEvent>();
-  @Output() logoutEvent = new EventEmitter<void>();
   @Output() saveProfileEvent = new EventEmitter<{ name: string; avatarFile?: File }>();
   @Output() removeAvatarEvent = new EventEmitter<void>();
   @Output() deleteAccountEvent = new EventEmitter<void>();
@@ -60,10 +58,6 @@ export class HeaderComponent {
 
   onToggleSidebar() {
     this.toggleSidebarEvent.emit();
-  }
-
-  onNavigateToAdmin() {
-    this.navigateToAdminEvent.emit();
   }
 
   toggleMenu(event: MouseEvent) {
@@ -103,7 +97,6 @@ export class HeaderComponent {
     try {
       await this.supabase.signOut();
       this.router.navigate(['/signin']);
-      this.logoutEvent.emit();
     } finally {
       this.loggingOut = false;
       this.menuVisible = false;
@@ -123,5 +116,14 @@ export class HeaderComponent {
   onDeleteAccount() {
     this.deleteAccountEvent.emit();
     this.closeDialogs();
+  }
+
+  toggleAdminDashboard() {  
+    const currentPath = this.router.url;
+    if (currentPath === '/admin') {
+      this.router.navigate(['/dashboard']);
+    } else {
+      this.router.navigate(['/admin']);
+    }
   }
 }
