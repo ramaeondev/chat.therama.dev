@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [3.4.4] - 2025-09-27
+
+### Changed
+- **Angular Control Flow**:
+  - Refactored all components to use new Angular 17+ control flow syntax
+  - Replaced `*ngIf`, `*ngFor`, and `*ngSwitch` with `@if`, `@for`, and `@switch`
+  - Improved template type checking and IDE support
+  - Removed unused imports and cleaned up component templates
+
 ## [3.4.2] - 2025-09-27
 
 ### Added

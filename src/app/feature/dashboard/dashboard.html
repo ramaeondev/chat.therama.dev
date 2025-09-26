@@ -18,9 +18,8 @@
   <!-- Content area -->
   <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
     <!-- Friends sidebar -->
-    <aside class="w-full md:w-64 bg-white border-r overflow-y-auto mobile-sidebar" 
-           *ngIf="showSidebar()"
-           [class.show]="showSidebar()">
+    @if (showSidebar()) {
+      <aside class="w-full md:w-64 bg-white border-r overflow-y-auto mobile-sidebar show">
       <div class="p-3 border-b font-medium text-gray-700 flex items-center justify-between">
         <span>Friends</span>
         <button class="md:hidden px-2" (click)="toggleSidebar()">✕</button>
@@ -42,37 +41,44 @@
         >
           {{ searching() ? 'Searching...' : 'Start chat' }}
         </button>
-        <div class="text-xs text-red-600" *ngIf="searchError()">{{ searchError() }}</div>
+        @if (searchError()) {
+          <div class="text-xs text-red-600">{{ searchError() }}</div>
+        }
       </div>
-      <ng-container *ngIf="friends().length > 0; else noFriends">
+      @if (friends().length > 0) {
         <ul>
-          <li *ngFor="let f of friends()" (click)="selectFriend(f.id)"
-              class="px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center justify-between gap-3"
-              [class.bg-blue-50]="selectedFriendId() === f.id">
-            <div class="flex items-center gap-2 min-w-0 flex-1">
-              <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="28"></app-user-avatar>
-              <div class="min-w-0">
-                <div class="truncate text-sm">{{ f.name || f.email }}</div>
-                <div class="text-[11px] text-gray-500 truncate">
-                  <ng-container *ngIf="f.last_message_text; else noMsg">
-                    <span class="opacity-70" *ngIf="f.last_message_from_me">You: </span>{{ f.last_message_text }}
-                  </ng-container>
-                  <ng-template #noMsg>
-                    {{ f.email }}
-                  </ng-template>
+          @for (f of friends(); track f.id) {
+            <li (click)="selectFriend(f.id)"
+                class="px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center justify-between gap-3"
+                [class.bg-blue-50]="selectedFriendId() === f.id">
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="28"></app-user-avatar>
+                <div class="min-w-0">
+                  <div class="truncate text-sm">{{ f.name || f.email }}</div>
+                  <div class="text-[11px] text-gray-500 truncate">
+                    @if (f.last_message_text) {
+                      @if (f.last_message_from_me) {
+                        <span class="opacity-70">You: </span>
+                      }
+                      {{ f.last_message_text }}
+                    } @else {
+                      {{ f.email }}
+                    }
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="text-[10px] text-gray-400" *ngIf="f.last_message_at as t">{{ t | date:'shortTime' }}</div>
-              <span class="w-2 h-2 rounded-full"
-                    [class.bg-green-500]="onlineIds().includes(f.id)"
-                    [class.bg-gray-300]="!onlineIds().includes(f.id)"></span>
-            </div>
-          </li>
+              <div class="flex items-center gap-2">
+                @if (f.last_message_at) {
+                  <div class="text-[10px] text-gray-400">{{ f.last_message_at | date:'shortTime' }}</div>
+                }
+                <span class="w-2 h-2 rounded-full"
+                      [class.bg-green-500]="onlineIds().includes(f.id)"
+                      [class.bg-gray-300]="!onlineIds().includes(f.id)"></span>
+              </div>
+            </li>
+          }
         </ul>
-      </ng-container>
-      <ng-template #noFriends>
+      } @else {
         <div class="p-6 text-center text-gray-500">
           <div class="mx-auto w-16 h-16 mb-4 rounded-full bg-gray-100 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,25 +88,23 @@
           <h3 class="text-lg font-medium text-gray-700 mb-1">No friends yet</h3>
           <p class="mb-4 text-sm">Start a new conversation by searching for a user's email above.</p>
         </div>
-      </ng-template>
-    </aside>
+      }
+      </aside>
+    }
 
     <!-- Chat area -->
     <main class="flex-1 flex flex-col h-full overflow-hidden">
       <!-- Chat header -->
       <div class="px-4 py-3 bg-white border-b flex items-center gap-3">
-        <ng-container *ngIf="selectedFriendId() && getFriend(selectedFriendId()); else noFriendSelected">
-          <ng-container *ngIf="getFriend(selectedFriendId()) as f">
-            <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="32"></app-user-avatar>
-          </ng-container>
+        @if (selectedFriendId() && getFriend(selectedFriendId()); as f) {
+          <app-user-avatar [src]="f.avatar_url" [name]="f.name || f.email || '?'" [userId]="f.id" [size]="32"></app-user-avatar>
           <div class="flex items-center gap-2">
             <h2 class="font-medium text-gray-800">{{ friendName(selectedFriendId()) }}</h2>
             <span class="w-2 h-2 rounded-full"
                   [class.bg-green-500]="onlineIds().includes(selectedFriendId() || '')"
                   [class.bg-gray-300]="!onlineIds().includes(selectedFriendId() || '')"></span>
           </div>
-        </ng-container>
-        <ng-template #noFriendSelected>
+        } @else {
           <div class="flex flex-col items-center justify-center w-full py-8">
             <div class="w-12 h-12 mb-3 text-gray-400">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -110,36 +114,41 @@
             <h3 class="text-lg font-medium text-gray-700">No conversation selected</h3>
             <p class="text-sm text-gray-500">Select a chat or start a new conversation</p>
           </div>
-        </ng-template>
+        }
       </div>
 
       <!-- Messages list -->
       <div class="flex-1 overflow-y-auto p-4 space-y-2 min-h-0">
-        <div *ngFor="let m of messages()" class="flex" [class.justify-end]="m.from === 'me'">
-          <div [class.bg-blue-600]="m.from === 'me'" [class.text-white]="m.from === 'me'"
-               [class.bg-white]="m.from === 'them'" [class.text-gray-800]="m.from === 'them'"
-               class="px-3 py-2 rounded-lg shadow max-w-[70%]">
-            <!-- Attachment rendering -->
-            <ng-container *ngIf="m.attachment as a; else textOnly">
-              <div class="space-y-2">
-                <ng-container *ngIf="a.url; else urlLoading">
-                  <a *ngIf="!isImageMime(a.mime)" [href]="a.url" target="_blank" rel="noopener" class="underline break-all">
-                    {{ a.name }}
-                  </a>
-                  <img *ngIf="isImageMime(a.mime)" [src]="a.url" alt="attachment" class="rounded max-h-64 object-contain" (error)="onAttachmentImageError(m.id!)" />
-                </ng-container>
-                <ng-template #urlLoading>
-                  <div class="text-xs text-gray-500">Loading attachment…</div>
-                </ng-template>
-                <p *ngIf="a.text" class="whitespace-pre-line">{{ a.text }}</p>
-              </div>
-            </ng-container>
-            <ng-template #textOnly>
-              <p class="whitespace-pre-line">{{ m.text }}</p>
-            </ng-template>
-            <div class="text-[11px] opacity-70 mt-1">{{ m.at | date:'shortTime' }}</div>
+        @for (m of messages(); track m.id) {
+          <div class="flex" [class.justify-end]="m.from === 'me'">
+            <div [class.bg-blue-600]="m.from === 'me'" [class.text-white]="m.from === 'me'"
+                 [class.bg-white]="m.from === 'them'" [class.text-gray-800]="m.from === 'them'"
+                 class="px-3 py-2 rounded-lg shadow max-w-[70%]">
+              <!-- Attachment rendering -->
+              @if (m.attachment; as a) {
+                <div class="space-y-2">
+                  @if (a.url) {
+                    @if (!isImageMime(a.mime)) {
+                      <a [href]="a.url" target="_blank" rel="noopener" class="underline break-all">
+                        {{ a.name }}
+                      </a>
+                    } @else {
+                      <img [src]="a.url" alt="attachment" class="rounded max-h-64 object-contain" (error)="onAttachmentImageError(m.id!)" />
+                    }
+                    @if (a.text) {
+                      <p class="whitespace-pre-line">{{ a.text }}</p>
+                    }
+                  } @else {
+                    <div class="text-xs text-gray-500">Loading attachment…</div>
+                  }
+                </div>
+              } @else {
+                <p class="whitespace-pre-line">{{ m.text }}</p>
+              }
+              <div class="text-[11px] opacity-70 mt-1">{{ m.at | date:'shortTime' }}</div>
+            </div>
           </div>
-        </div>
+        }
       </div>
 
       <!-- Composer with Drop Zone -->
@@ -173,7 +182,9 @@
                      class="hidden" 
                      [attr.accept]="ACCEPTED_MIME_LIST.join(',')" />
             </label>
-            <span class="text-xs text-gray-500" *ngIf="uploading()">Uploading...</span>
+            @if (uploading()) {
+              <span class="text-xs text-gray-500">Uploading...</span>
+            }
           </div>
           <input 
             type="text" 
@@ -195,23 +206,30 @@
           </button>
         </div>
         <!-- Drop hint -->
-        <div *ngIf="dragging()" class="text-xs text-blue-700">Drop a file anywhere in this box to upload</div>
+        @if (dragging()) {
+          <div class="text-xs text-blue-700">Drop a file anywhere in this box to upload</div>
+        }
         <!-- Upload progress (determinate) -->
-        <div *ngIf="uploading()" class="w-full">
-          <div class="w-full h-2 bg-gray-100 rounded">
-            <div class="h-2 bg-blue-500 rounded" [style.width.%]="uploadProgress()"></div>
+        @if (uploading()) {
+          <div class="w-full">
+            <div class="w-full h-2 bg-gray-100 rounded">
+              <div class="h-2 bg-blue-500 rounded" [style.width.%]="uploadProgress()"></div>
+            </div>
+            <div class="text-[11px] text-gray-500 mt-1">Uploading {{ uploadProgress() }}%</div>
           </div>
-          <div class="text-[11px] text-gray-500 mt-1">Uploading {{ uploadProgress() }}%</div>
-        </div>
+        }
         <!-- Validation error for uploads -->
-        <div *ngIf="uploadError()" class="text-xs text-red-600" role="alert" aria-live="polite">{{ uploadError() }}</div>
+        @if (uploadError()) {
+          <div class="text-xs text-red-600" role="alert" aria-live="polite">{{ uploadError() }}</div>
+        }
 
         <!-- Full emoji picker -->
-        <app-emoji-picker
-          *ngIf="showEmoji()"
-          (emojiSelect)="onEmojiSelected($event)"
-          (closed)="onEmojiClosed()"
-        ></app-emoji-picker>
+        @if (showEmoji()) {
+          <app-emoji-picker
+            (emojiSelect)="onEmojiSelected($event)"
+            (closed)="onEmojiClosed()"
+          ></app-emoji-picker>
+        }
       </form>
     </main>
   </div>

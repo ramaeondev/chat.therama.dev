@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, WritableSignal, OnDestroy } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { SupabaseService } from '../../core/supabase.service';
 import { HeaderComponent } from '../../shared/components/header/header.component';
@@ -8,10 +8,9 @@ import { AuthSession, UserMetadata } from '@supabase/supabase-js';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, HeaderComponent, DatePipe],
+  imports: [CommonModule, RouterModule, HeaderComponent],
   templateUrl: './admin-dashboard.html',
-  styleUrls: ['./admin-dashboard.scss'],
-  providers: [DatePipe]
+  styleUrls: ['./admin-dashboard.scss']
 })
 export class AdminDashboardComponent implements OnDestroy {
   loading = signal(false);
