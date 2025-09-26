@@ -1,7 +1,7 @@
 {
   "application": {
     "name": "QuickChat",
-    "version": "3.4.0",
+    "version": "3.4.4",
     "description": "Modern real-time chat application built with Angular and Supabase",
     "tagline": "Connect instantly, chat seamlessly",
     "url": "https://chat.therama.dev"
@@ -194,6 +194,72 @@
       }
     },
     "recentlyAdded": {
+      "v3.4.4": {
+        "title": "Angular 17+ Control Flow",
+        "description": "Refactored application to use new Angular 17+ control flow syntax",
+        "icon": "🔄",
+        "items": [
+          {
+            "name": "Modern Template Syntax",
+            "description": "Migrated from *ngIf/*ngFor to @if/@for syntax",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Improved Type Checking",
+            "description": "Enhanced template type safety with new control flow",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Better IDE Support",
+            "description": "Improved code completion and error detection",
+            "status": "✅ Implemented"
+          }
+        ]
+      },
+      "v3.4.2": {
+        "title": "Enhanced Empty States & UI/UX",
+        "description": "Improved user experience with better empty states and UI feedback",
+        "icon": "✨",
+        "items": [
+          {
+            "name": "Friendly Empty States",
+            "description": "Helpful messages when no friends or conversations are available",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Improved Form Controls",
+            "description": "Better visual feedback for disabled states and inputs",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Accessibility Enhancements",
+            "description": "Better keyboard navigation and contrast ratios",
+            "status": "✅ Implemented"
+          }
+        ]
+      },
+      "v3.4.1": {
+        "title": "Header & Admin Dashboard Improvements",
+        "description": "Refactored header component and fixed admin dashboard issues",
+        "icon": "🔧",
+        "items": [
+          {
+            "name": "Decoupled Header",
+            "description": "Improved component architecture with better separation of concerns",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Admin Dashboard Fixes",
+            "description": "Resolved DatePipe and error handling issues",
+            "status": "✅ Implemented"
+          },
+          {
+            "name": "Improved Error Handling",
+            "description": "Better user feedback with snackbar notifications",
+            "status": "✅ Implemented"
+          }
+        ]
+      },
       "v3.4.0": {
         "title": "Enhanced User Profile",
         "description": "Redesigned profile interface with additional user information and improved UX",
