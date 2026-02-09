@@ -28,15 +28,6 @@ jobs:
           node-version: 20
           cache: 'npm'
         
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          # Replace the role ARN below with your AWS role that trusts GitHub OIDC
-          role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsRole
-          aws-region: ${{ secrets.AWS_REGION }}
-          audience: sts.amazonaws.com
-          role-duration-seconds: 1200
-
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -47,10 +38,3 @@ jobs:
           vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
           vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Log and Update Deployment
-        if: always()
-        uses: ramaeondev/therama.dev/.github/actions/log-and-update-deployment@master
-        with:
-          start_time: ${{ env.START_TIME }}
-          s3_bucket: ${{ secrets.S3_UPLOAD_BUCKET }}
