@@ -16,9 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Capture start time
-        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
-
       - name: Checkout code
         uses: actions/checkout@v3
         
