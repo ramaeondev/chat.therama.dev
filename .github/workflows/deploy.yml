@@ -5,6 +5,10 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 
 
 jobs:
@@ -16,7 +20,7 @@ jobs:
         run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -24,12 +28,14 @@ jobs:
           node-version: 20
           cache: 'npm'
         
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # Replace the role ARN below with your AWS role that trusts GitHub OIDC
+          role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsRole
           aws-region: ${{ secrets.AWS_REGION }}
+          audience: sts.amazonaws.com
+          role-duration-seconds: 1200
 
       - name: Deploy to Vercel
         env:
